@@ -46,6 +46,14 @@ public class IntSortTest
   }
 
   @Test
+  public void testESortArray() throws Exception {
+    int array[] = {};
+
+    IntSort.sort(array);
+
+  }
+
+  @Test
   public void testSortList() throws Exception {
     int array[] = generateRandomIntArray(ARRAY_SIZE, SEED);
     List<Integer> list = new ArrayList<Integer>(ARRAY_SIZE);

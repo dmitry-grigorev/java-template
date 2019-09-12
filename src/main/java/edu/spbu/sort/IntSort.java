@@ -21,25 +21,28 @@ public class IntSort {
   //med   -- значение опорного элемента
   //buf   -- вспомогательная переменная
   public static void quickSort(int array[],int left,int right){
-    int beg=left,end=right,med=array[(left+right)/2];
-    int buf;
-    while(beg<=end)
+    if(array.length!=0)
     {
-      for(;array[beg]<med;beg++);
-      for(;array[end]>med;end--);
-      if(beg<=end)
+      int beg=left,end=right,med=array[(left+right)/2];
+      int buf;
+      while(beg<=end)
       {
-        buf=array[beg];
-        array[beg]=array[end];
-        array[end]=buf;
-        beg++;
-        end--;
+        for(;array[beg]<med;beg++);
+        for(;array[end]>med;end--);
+        if(beg<=end)
+        {
+          buf=array[beg];
+          array[beg]=array[end];
+          array[end]=buf;
+          beg++;
+          end--;
+        }
       }
+      if(left<end) quickSort(array,left,end);
+      if(beg<right) quickSort(array,beg,right);
+
+
     }
-    if(left<end) quickSort(array,left,end);
-    if(beg<right) quickSort(array,beg,right);
-
-
   }
 
   public static void sort (List<Integer> list) {
