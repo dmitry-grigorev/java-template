@@ -62,7 +62,7 @@ public class DenseMatrix implements Matrix
   @Override public Matrix mul(Matrix o)
   {
       DenseMatrix DMtx=(DenseMatrix)o;
-      if(this.nc==DMtx.nr)
+      if(this.nc==DMtx.nr&&this.DMatr!=null&&DMtx.DMatr!=null)
       {
           double[][] res=new double[this.nr][DMtx.nc];
           for(int i=0;i<this.nr;i++)
@@ -100,8 +100,8 @@ public class DenseMatrix implements Matrix
   @Override public boolean equals(Object o) {
 
     DenseMatrix DMtx=(DenseMatrix)o;
-    if(this.nr==DMtx.nr) {
-      if(this.nc==DMtx.nc){
+    if(this.DMatr==null||DMtx.DMatr==null) return false;
+    if(this.nr==DMtx.nr&&this.nc==DMtx.nc) {
         for(int i=0;i<this.nr;i++)
         {
           for(int j=0;j<this.nc;j++)
@@ -113,7 +113,6 @@ public class DenseMatrix implements Matrix
           }
         }
         return true;
-      }
     }
     return false;
   }
