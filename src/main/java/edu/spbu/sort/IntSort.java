@@ -42,6 +42,7 @@ public class IntSort {
       if(beg<right) quickSort(array,beg,right);
 
 
+
     }
   }
 
