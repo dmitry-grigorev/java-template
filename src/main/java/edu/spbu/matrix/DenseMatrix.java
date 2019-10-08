@@ -1,48 +1,68 @@
 package edu.spbu.matrix;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Scanner;
-import java.io.*;
 /**
  * Плотная матрица
  */
 public class DenseMatrix implements Matrix
 {
-  public double[][] DMatr=new double[3][3];//матрица
-  public int nr;//количество строк
-  public int nc;//количество столбцов
+  private double[][] DMatr;//матрица
+  private int nr;//количество строк
+  private int nc;//количество столбцов
 
     /**
    * загружает матрицу из файла
    * @param fileName
    */
   public DenseMatrix(String fileName) {
-      File src=new File(fileName);
       try{
-          Scanner sc=new Scanner(src);
-          String[] buf;
-          int i=0,j=0,length=0;
-          while(sc.hasNextLine())
+          FileReader rdr=new FileReader(fileName);
+          BufferedReader bufR=new BufferedReader(rdr);
+          String[] dividedcurrln;
+          String strrepcurrln=bufR.readLine();
+          double[] currln;
+          ArrayList<double[]> L= new ArrayList<double[]>();
+          int height=0,length=0;
+          while(strrepcurrln!=null)
           {
-              buf=sc.nextLine().split(" ");
-              length=buf.length;
-              for(;j<length;j++)
+              dividedcurrln=strrepcurrln.split(" ");
+              length=dividedcurrln.length;
+              currln=new double[length];
+              for(int j=0;j<length;j++)
               {
-                  DMatr[i][j]=Double.parseDouble(buf[j]);
+                  currln[j]=Double.parseDouble(dividedcurrln[j]);
               }
-              j=0;
-              i++;
+              L.add(currln);
+              height++;
+              strrepcurrln=bufR.readLine();
           }
-          nr=length;
-          nc=i;
+          rdr.close();
+          bufR.close();
+          double[][]res=new double[height][length];
+          for(int i=0;i<height;i++)
+          {
+              for(int k=0;k<length;k++)
+              {
+                  res[i][k]=L.get(i)[k];
+              }
+          }
+          DMatr=res;
+          nc=length;
+          nr=height;
       }
       catch(FileNotFoundException e)
       {
+
           e.printStackTrace();
       }
-      catch(NullPointerException e)
-      {
-
+       catch (IOException e) {
+          e.printStackTrace();
       }
   }
 
@@ -51,36 +71,56 @@ public class DenseMatrix implements Matrix
       if (input.length > 0 )
       {
           DMatr=input;
-          nc=input.length;
-          nr=input[0].length;
+          nr=input.length;
+          nc=input[0].length;
       }
   }
-  /**
-   * однопоточное умнджение матриц
-   * должно поддерживаться для всех 4-х вариантов
-   *
-   * @param o
-   * @return
-   */
+
+  private DenseMatrix Transpose()
+  {
+      double[][] transposedDMtx=new double[nc][nr];
+      for(int i=0;i<nc;i++)
+      {
+          for(int j=0;j<nr;j++)
+          {
+              transposedDMtx[i][j]=DMatr[j][i];
+          }
+      }
+      return new DenseMatrix(transposedDMtx);
+  }
+
+    /**
+     * однопоточное умнджение матриц
+     * должно поддерживаться для всех 4-х вариантов
+     *
+     * @param o
+     * @return
+     */
   @Override public Matrix mul(Matrix o)
   {
       DenseMatrix DMtx=(DenseMatrix)o;
       if(nc==DMtx.nr&&DMatr!=null&&DMtx.DMatr!=null)
       {
-          double[][] res=new double[this.nr][DMtx.nc];
+          //System.out.println("Я дошёл до сюда");
+          double[][] res=new double[nr][DMtx.nc];
+          DenseMatrix tDMtx=DMtx.Transpose();
           for(int i=0;i<nr;i++)
           {
-              for(int j=0;j<DMtx.nc;j++)
+              for(int j=0;j<tDMtx.nr;j++)
               {
-                  for(int k=0;k<nr;k++)
+                  for(int k=0;k<nc;k++)
                   {
-                      res[i][j]+=DMatr[i][k]*DMtx.DMatr[k][j];
+                      res[i][j]+=DMatr[i][k]*tDMtx.DMatr[j][k];
                   }
               }
           }
           return new DenseMatrix(res);
       }
-      else return null;
+      else
+      {
+          System.out.println("Данные не отвечают требованиям умножения");
+          return null;
+      }
   }
 
   /**
@@ -94,10 +134,32 @@ public class DenseMatrix implements Matrix
     return null;
   }
 
-  @Override
+    @Override
     public int hashCode() {
-        return Arrays.hashCode(DMatr);
-  }
+        int result = Objects.hash(nr, nc);
+        result = 31 * result + Arrays.deepHashCode(DMatr);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder resBuilder=new StringBuilder();
+        resBuilder.append('\n');
+        for(int i=0;i<nr;i++)
+        {
+            resBuilder.append('[');
+            for(int j=0;j<nc;j++)
+            {
+                resBuilder.append(DMatr[i][j]);
+                if(j<nc-1)
+                    resBuilder.append(" ");
+            }
+                resBuilder.append("]\n");
+
+        }
+        String res=resBuilder.toString();
+        return res;
+    }
 
     /**
    * спавнивает с обоими вариантами
@@ -108,9 +170,11 @@ public class DenseMatrix implements Matrix
   @Override public boolean equals(Object o) {
 
     DenseMatrix DMtx=(DenseMatrix)o;
-    if(DMtx.DMatr==DMatr) return true;
     if(DMatr==null||DMtx.DMatr==null) return false;
-    if(DMatr.hashCode()!=DMtx.DMatr.hashCode())
+    if(DMtx.DMatr==DMatr) return true;
+    System.out.println("expected: "+this.toString());
+    System.out.println("actual: " +DMtx.toString());
+    if(this.hashCode() == DMtx.hashCode())
     if(nr==DMtx.nr&&nc==DMtx.nc) {
         for(int i=0;i<nr;i++)
         {
