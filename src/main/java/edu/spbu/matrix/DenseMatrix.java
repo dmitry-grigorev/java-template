@@ -1,9 +1,6 @@
 package edu.spbu.matrix;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -27,13 +24,13 @@ public class DenseMatrix implements Matrix
           String[] dividedcurrln;
           String strrepcurrln=bufR.readLine();
           double[] currln;
-          ArrayList<double[]> L= new ArrayList<double[]>();
+          ArrayList<double[]> L= new ArrayList<>();
           int height=0,length=0;
           while(strrepcurrln!=null)
           {
               dividedcurrln=strrepcurrln.split(" ");
               length=dividedcurrln.length;
-              currln=new double[length];
+                currln=new double[length];
               for(int j=0;j<length;j++)
               {
                   currln[j]=Double.parseDouble(dividedcurrln[j]);
@@ -58,7 +55,7 @@ public class DenseMatrix implements Matrix
       }
       catch(FileNotFoundException e)
       {
-
+          System.out.println("File not found");
           e.printStackTrace();
       }
        catch (IOException e) {
@@ -66,7 +63,7 @@ public class DenseMatrix implements Matrix
       }
   }
 
-  public DenseMatrix(double[][] input)
+  private DenseMatrix(double[][] input)
   {
       if (input.length > 0 )
       {
@@ -118,7 +115,7 @@ public class DenseMatrix implements Matrix
       }
       else
       {
-          System.out.println("Данные не отвечают требованиям умножения");
+          System.out.println("Данные не отвечают правилам матричного умножения");
           return null;
       }
   }
@@ -145,20 +142,17 @@ public class DenseMatrix implements Matrix
     public String toString() {
         StringBuilder resBuilder=new StringBuilder();
         resBuilder.append('\n');
-        for(int i=0;i<nr;i++)
-        {
+        for(int i=0;i<nr;i++) {
             resBuilder.append('[');
-            for(int j=0;j<nc;j++)
-            {
+            for (int j = 0; j < nc; j++) {
                 resBuilder.append(DMatr[i][j]);
-                if(j<nc-1)
+                if (j < nc - 1)
                     resBuilder.append(" ");
             }
-                resBuilder.append("]\n");
+            resBuilder.append("]\n");
 
         }
-        String res=resBuilder.toString();
-        return res;
+        return resBuilder.toString();
     }
 
     /**
