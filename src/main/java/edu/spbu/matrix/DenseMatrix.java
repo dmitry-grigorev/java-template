@@ -30,7 +30,7 @@ public class DenseMatrix implements Matrix
           {
               dividedcurrln=strrepcurrln.split(" ");
               length=dividedcurrln.length;
-                currln=new double[length];
+              currln=new double[length];
               for(int j=0;j<length;j++)
               {
                   currln[j]=Double.parseDouble(dividedcurrln[j]);
@@ -98,7 +98,6 @@ public class DenseMatrix implements Matrix
       DenseMatrix DMtx=(DenseMatrix)o;
       if(nc==DMtx.nr&&DMatr!=null&&DMtx.DMatr!=null)
       {
-          //System.out.println("Я дошёл до сюда");
           double[][] res=new double[nr][DMtx.nc];
           DenseMatrix tDMtx=DMtx.Transpose();
           for(int i=0;i<nr;i++)
@@ -169,19 +168,20 @@ public class DenseMatrix implements Matrix
     System.out.println("expected: "+this.toString());
     System.out.println("actual: " +DMtx.toString());
     if(this.hashCode() == DMtx.hashCode())
-    if(nr==DMtx.nr&&nc==DMtx.nc) {
-        for(int i=0;i<nr;i++)
+        if(nr==DMtx.nr&&nc==DMtx.nc)
         {
-          for(int j=0;j<nc;j++)
-          {
-            if(DMatr[i][j]!=DMtx.DMatr[i][j])
+            for(int i=0;i<nr;i++)
             {
-              return false;
+                for(int j=0;j<nc;j++)
+                {
+                    if(DMatr[i][j]!=DMtx.DMatr[i][j])
+                    {
+                         return false;
+                    }
+                }
             }
-          }
+            return true;
         }
-        return true;
-    }
     return false;
   }
 
