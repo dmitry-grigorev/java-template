@@ -39,7 +39,7 @@ public class DenseMatrix implements Matrix
               height++;
               strrepcurrln=bufR.readLine();
           }
-          rdr.close();
+          
           bufR.close();
           double[][]res=new double[height][length];
           for(int i=0;i<height;i++)
@@ -130,15 +130,14 @@ public class DenseMatrix implements Matrix
     return null;
   }
 
-    @Override
-    public int hashCode() {
+
+  @Override public int hashCode() {
         int result = Objects.hash(nr, nc);
         result = 31 * result + Arrays.deepHashCode(DMatr);
         return result;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         StringBuilder resBuilder=new StringBuilder();
         resBuilder.append('\n');
         for(int i=0;i<nr;i++) {
