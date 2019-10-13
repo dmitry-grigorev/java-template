@@ -24,4 +24,10 @@ public class MatrixTest
         Matrix expected = new DenseMatrix("result2.txt");
         assertEquals(expected, m1.mul(m2));
   }
+
+    @Test
+    public void mulSSEx2() {
+        Matrix m1 = new SparseMatrix("SparseA1.txt");
+        System.out.println(m1.toString());
+    }
 }
