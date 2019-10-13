@@ -21,6 +21,7 @@ public class DenseMatrix implements Matrix
       try{
           FileReader rdr=new FileReader(fileName);
           BufferedReader bufR=new BufferedReader(rdr);
+
           String[] dividedcurrln;
           String strrepcurrln=bufR.readLine();
           double[] currln;
@@ -40,7 +41,6 @@ public class DenseMatrix implements Matrix
               strrepcurrln=bufR.readLine();
           }
           rdr.close();
-          bufR.close();
           double[][]res=new double[height][length];
           for(int i=0;i<height;i++)
           {
@@ -98,7 +98,6 @@ public class DenseMatrix implements Matrix
       DenseMatrix DMtx=(DenseMatrix)o;
       if(nc==DMtx.nr&&DMatr!=null&&DMtx.DMatr!=null)
       {
-          //System.out.println("Я дошёл до сюда");
           double[][] res=new double[nr][DMtx.nc];
           DenseMatrix tDMtx=DMtx.Transpose();
           for(int i=0;i<nr;i++)
