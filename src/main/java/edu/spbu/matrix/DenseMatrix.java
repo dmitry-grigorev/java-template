@@ -21,7 +21,6 @@ public class DenseMatrix implements Matrix
       try{
           FileReader rdr=new FileReader(fileName);
           BufferedReader bufR=new BufferedReader(rdr);
-
           String[] dividedcurrln;
           String strrepcurrln=bufR.readLine();
           double[] currln;
@@ -31,7 +30,7 @@ public class DenseMatrix implements Matrix
           {
               dividedcurrln=strrepcurrln.split(" ");
               length=dividedcurrln.length;
-                currln=new double[length];
+              currln=new double[length];
               for(int j=0;j<length;j++)
               {
                   currln[j]=Double.parseDouble(dividedcurrln[j]);
@@ -40,7 +39,8 @@ public class DenseMatrix implements Matrix
               height++;
               strrepcurrln=bufR.readLine();
           }
-          rdr.close();
+          
+          bufR.close();
           double[][]res=new double[height][length];
           for(int i=0;i<height;i++)
           {
@@ -130,15 +130,14 @@ public class DenseMatrix implements Matrix
     return null;
   }
 
-    @Override
-    public int hashCode() {
+
+  @Override public int hashCode() {
         int result = Objects.hash(nr, nc);
         result = 31 * result + Arrays.deepHashCode(DMatr);
         return result;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         StringBuilder resBuilder=new StringBuilder();
         resBuilder.append('\n');
         for(int i=0;i<nr;i++) {
@@ -168,19 +167,20 @@ public class DenseMatrix implements Matrix
     System.out.println("expected: "+this.toString());
     System.out.println("actual: " +DMtx.toString());
     if(this.hashCode() == DMtx.hashCode())
-    if(nr==DMtx.nr&&nc==DMtx.nc) {
-        for(int i=0;i<nr;i++)
+        if(nr==DMtx.nr&&nc==DMtx.nc)
         {
-          for(int j=0;j<nc;j++)
-          {
-            if(DMatr[i][j]!=DMtx.DMatr[i][j])
+            for(int i=0;i<nr;i++)
             {
-              return false;
+                for(int j=0;j<nc;j++)
+                {
+                    if(DMatr[i][j]!=DMtx.DMatr[i][j])
+                    {
+                         return false;
+                    }
+                }
             }
-          }
+            return true;
         }
-        return true;
-    }
     return false;
   }
 
