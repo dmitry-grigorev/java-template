@@ -95,7 +95,14 @@ public class DenseMatrix implements Matrix
      */
   @Override public Matrix mul(Matrix o)
   {
-      DenseMatrix DMtx=(DenseMatrix)o;
+      if(o instanceof DenseMatrix)
+          return mul((DenseMatrix) o);
+      return null;
+
+  }
+
+  public DenseMatrix mul(DenseMatrix DMtx)
+  {
       if(nc==DMtx.nr&&DMatr!=null&&DMtx.DMatr!=null)
       {
           double[][] res=new double[nr][DMtx.nc];

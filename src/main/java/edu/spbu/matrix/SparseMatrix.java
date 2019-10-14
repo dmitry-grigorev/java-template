@@ -29,21 +29,13 @@ public class SparseMatrix implements Matrix
       double element;
       while(strrepcurrln!=null)
       {
-        if(strrepcurrln.isBlank());
-        {
-          dividedcurrln = strrepcurrln.split(" ");
-          length = dividedcurrln.length;
-          key0=height*length;
-          for (int i = 0; i < length; i++) {
+        dividedcurrln = strrepcurrln.split(" ");
+        length = dividedcurrln.length;
+        key0=height*length;
+        for (int i = 0; i < length; i++) {
+          if(!dividedcurrln[0].isEmpty()) {
             element = Double.parseDouble(dividedcurrln[i]);
-              if (element != 0) {
-
-                if (Array != null) {
-                  Array.put(key0 + i, element);
-                }
-              }
-
-
+            Array.put(key0 + i, element);
           }
         }
         height++;
@@ -62,6 +54,15 @@ public class SparseMatrix implements Matrix
     }
 
   }
+
+  public SparseMatrix(TreeMap<Integer,Double> array,int nrows,int ncols)
+  {
+    this.Array=array;
+    this.nr=nrows;
+    this.nc=ncols;
+  }
+
+
   /**
    * однопоточное умнджение матриц
    * должно поддерживаться для всех 4-х вариантов
@@ -71,9 +72,38 @@ public class SparseMatrix implements Matrix
    */
   @Override public Matrix mul(Matrix o)
   {
+    if(o instanceof SparseMatrix)
+    {
+      return mul((SparseMatrix)o);
+    }
     return null;
   }
 
+  public SparseMatrix mul(SparseMatrix SMtx)
+  {
+    if(nc==SMtx.nr&&Array!=null&&SMtx.Array!=null)
+    {
+      TreeMap<Integer,Double> result=new TreeMap<>();
+      double buf=0;
+      for(int i=0;i<nr;i++)
+      {
+        for(int j=0;j<SMtx.nc;j++)
+        {
+          buf=0;
+          for(int k=0;k<nc;k++)
+          {
+            if(Array.containsKey(i*nc+k)&&SMtx.Array.containsKey(k* SMtx.nc+j))
+            {
+              buf+=Array.get(i*nc+k)*(SMtx.Array.get(k*SMtx.nc+j));
+            }
+          }
+          result.put(i*SMtx.nc+j,buf);
+        }
+      }
+      return new SparseMatrix(result,nr,SMtx.nc);
+    }
+    return null;
+  }
   /**
    * многопоточное умножение матриц
    *

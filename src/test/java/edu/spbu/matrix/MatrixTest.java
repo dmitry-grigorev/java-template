@@ -26,8 +26,15 @@ public class MatrixTest
   }
 
     @Test
-    public void mulSSEx2() {
+    public void mulSSEx1() {
         Matrix m1 = new SparseMatrix("SparseA1.txt");
         System.out.println(m1.toString());
+    }
+
+    @Test
+    public void mulSSEx2() {
+        Matrix m1 = new SparseMatrix("SparseA2.txt");
+        Matrix m2 = new SparseMatrix("SparseA3.txt");
+        System.out.println(m1.mul(m2).toString());
     }
 }
