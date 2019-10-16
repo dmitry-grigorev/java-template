@@ -9,9 +9,9 @@ import java.util.Objects;
  */
 public class DenseMatrix implements Matrix
 {
-  private double[][] DMatr;//матрица
-  private int nr;//количество строк
-  private int nc;//количество столбцов
+    public double[][] DMatr;//матрица
+  public int nr;//количество строк
+  public int nc;//количество столбцов
 
     /**
    * загружает матрицу из файла
@@ -168,26 +168,41 @@ public class DenseMatrix implements Matrix
 
   @Override public boolean equals(Object o) {
 
-    DenseMatrix DMtx=(DenseMatrix)o;
-    if(DMatr==null||DMtx.DMatr==null) return false;
-    if(DMtx.DMatr==DMatr) return true;
-    System.out.println("expected: "+this.toString());
-    System.out.println("actual: " +DMtx.toString());
-    if(this.hashCode() == DMtx.hashCode())
-        if(nr==DMtx.nr&&nc==DMtx.nc)
-        {
-            for(int i=0;i<nr;i++)
-            {
-                for(int j=0;j<nc;j++)
-                {
-                    if(DMatr[i][j]!=DMtx.DMatr[i][j])
-                    {
-                         return false;
+    if(o instanceof DenseMatrix) {
+        DenseMatrix DMtx=(DenseMatrix)o;
+        if (DMatr == null || DMtx.DMatr == null) return false;
+        if (DMtx.DMatr == DMatr) return true;
+        System.out.println("expected: " + this.toString());
+        System.out.println("actual: " + DMtx.toString());
+        if (this.hashCode() == DMtx.hashCode())
+            if (nr == DMtx.nr && nc == DMtx.nc) {
+                for (int i = 0; i < nr; i++) {
+                    for (int j = 0; j < nc; j++) {
+                        if (DMatr[i][j] != DMtx.DMatr[i][j]) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+    }
+    else if(o instanceof SparseMatrix)
+    {
+        SparseMatrix SMtx=(SparseMatrix)o;
+        if (DMatr == null || SMtx.SMatr == null) return false;
+        System.out.println("expected: " + this.toString());
+        System.out.println("actual: " + SMtx.toString());
+        if (nr == SMtx.nr && nc == SMtx.nc) {
+            for (int i = 0; i < nr; i++) {
+                for (int j = 0; j < nc; j++) {
+                    if (DMatr[i][j]!=SMtx.getEL(i,j)) {
+                        return false;
                     }
                 }
             }
             return true;
         }
+    }
     return false;
   }
 

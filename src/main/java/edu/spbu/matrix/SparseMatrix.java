@@ -11,7 +11,7 @@ import java.util.*;
  */
 public class SparseMatrix implements Matrix
 {
-  public TreeMap <Integer,Double> Array;
+  public TreeMap <Integer, Double> SMatr;
   public int nr;
   public int nc;
   /**
@@ -22,7 +22,7 @@ public class SparseMatrix implements Matrix
     try {
       FileReader rdr = new FileReader(fileName);
       BufferedReader bufR = new BufferedReader(rdr);
-      Array=new TreeMap<>();
+      SMatr=new TreeMap<>();
       String[] dividedcurrln;
       String strrepcurrln=bufR.readLine();
       int length=0,key0,height=0;
@@ -35,7 +35,7 @@ public class SparseMatrix implements Matrix
         for (int i = 0; i < length; i++) {
           if(!dividedcurrln[0].isEmpty()) {
             element = Double.parseDouble(dividedcurrln[i]);
-            Array.put(key0 + i, element);
+            SMatr.put(key0 + i, element);
           }
         }
         height++;
@@ -55,9 +55,9 @@ public class SparseMatrix implements Matrix
 
   }
 
-  public SparseMatrix(TreeMap<Integer,Double> array,int nrows,int ncols)
+  public SparseMatrix(TreeMap<Integer,Double> SMatr,int nrows,int ncols)
   {
-    this.Array=array;
+    this.SMatr=SMatr;
     this.nr=nrows;
     this.nc=ncols;
   }
@@ -81,7 +81,7 @@ public class SparseMatrix implements Matrix
 
   public SparseMatrix mul(SparseMatrix SMtx)
   {
-    if(nc==SMtx.nr&&Array!=null&&SMtx.Array!=null)
+    if(nc==SMtx.nr&&SMatr!=null&&SMtx.SMatr!=null)
     {
       TreeMap<Integer,Double> result=new TreeMap<>();
       double buf=0;
@@ -92,9 +92,9 @@ public class SparseMatrix implements Matrix
           buf=0;
           for(int k=0;k<nc;k++)
           {
-            if(Array.containsKey(i*nc+k)&&SMtx.Array.containsKey(k* SMtx.nc+j))
+            if(SMatr.containsKey(i*nc+k)&&SMtx.SMatr.containsKey(k* SMtx.nc+j))
             {
-              buf+=Array.get(i*nc+k)*(SMtx.Array.get(k*SMtx.nc+j));
+              buf+=SMatr.get(i*nc+k)*(SMtx.SMatr.get(k*SMtx.nc+j));
             }
           }
           result.put(i*SMtx.nc+j,buf);
@@ -114,14 +114,59 @@ public class SparseMatrix implements Matrix
   {
     return null;
   }
-
+  public double getEL(int i,int j)
+  {
+      if(!SMatr.containsKey(i*nc+j))
+        return 0;
+      else return SMatr.get(i*nc+j);
+  }
   /**
    * спавнивает с обоими вариантами
    * @param o
    * @return
    */
   @Override public boolean equals(Object o) {
+      if(o instanceof DenseMatrix)
+      {
+          DenseMatrix DMtx=(DenseMatrix) o;
+          if (SMatr == null || DMtx.DMatr == null) return false;
+          System.out.println("expected: " + this.toString());
+          System.out.println("actual: " + DMtx.toString());
+          if (nr == DMtx.nr && nc == DMtx.nc) {
+              for (int i = 0; i < nr; i++) {
+                  for (int j = 0; j < nc; j++) {
+                      if (DMtx.DMatr[i][j]!=this.getEL(i,j)) {
+                          return false;
+                      }
+                  }
+              }
+              return true;
+          }
+      }
+      else if(o instanceof SparseMatrix)
+      {
+          SparseMatrix SMtx=(SparseMatrix)o;
+          if (SMatr == null || SMtx.SMatr == null) return false;
+          if (SMtx.SMatr == SMatr) return true;
+          //System.out.println("expected: " + this.toString());
+         // System.out.println("actual: " + SMtx.toString());
+          if (this.hashCode() == SMtx.hashCode())
+              if (nr == SMtx.nr && nc == SMtx.nc) {
+                  for (int i = 0; i < nr; i++) {
+                      for (int j = 0; j < nc; j++) {
+                          if(SMtx.getEL(i,j)!=this.getEL(i,j))
+                              return false;
+                      }
+                  }
+                  return true;
+              }
+      }
     return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(SMatr, nr, nc);
   }
 
   @Override public String toString() {
@@ -130,8 +175,8 @@ public class SparseMatrix implements Matrix
       for (int i = 0; i < nr; i++) {
         resBuilder.append('[');
         for (int j = 0; j < nc; j++) {
-          if (Array.containsKey(i * nc + j)) {
-            resBuilder.append(Array.get(i * nc + j));
+          if (SMatr.containsKey(i * nc + j)) {
+            resBuilder.append(SMatr.get(i * nc + j));
           } else {
             resBuilder.append(0.0);
           }
