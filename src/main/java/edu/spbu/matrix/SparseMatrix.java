@@ -150,7 +150,7 @@ public class SparseMatrix implements Matrix
           if (SMtx.SMatr == SMatr) return true;
           //System.out.println("expected: " + this.toString());
          // System.out.println("actual: " + SMtx.toString());
-          if (this.hashCode() == SMtx.hashCode())
+          //if (this.hashCode() == SMtx.hashCode())
               if (nr == SMtx.nr && nc == SMtx.nc) {
                   for (int i = 0; i < nr; i++) {
                       for (int j = 0; j < nc; j++) {
@@ -158,6 +158,7 @@ public class SparseMatrix implements Matrix
                               return false;
                       }
                   }
+
                   return true;
               }
       }

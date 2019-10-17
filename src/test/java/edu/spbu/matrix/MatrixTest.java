@@ -28,24 +28,26 @@ public class MatrixTest
     @Test
     public void mulSSEx1() {
         Matrix m1 = new SparseMatrix("SparseA1.txt");
-        System.out.println(m1.toString());
+        Matrix m2 = new SparseMatrix("SparseA2.txt");
+        Matrix expected=new SparseMatrix("ResA1xA2.txt");
+        assertEquals(expected, m1.mul(m2));
     }
 
     @Test
     public void mulSSEx2() {
-        Matrix m1 = new SparseMatrix("SparseA2.txt");
-        Matrix m2 = new SparseMatrix("SparseA3.txt");
-        Matrix expected=new SparseMatrix("ResA2xA3.txt");
+        Matrix m1 = new SparseMatrix("SparseA3.txt");
+        Matrix m2 = new SparseMatrix("SparseA4.txt");
+        Matrix expected=new SparseMatrix("ResA3xA4.txt");
         assertEquals(expected, m1.mul(m2));
     }
 
-    /*@Test
+    @Test
     public void mulSSGiant() {
         Matrix m1 = new SparseMatrix("SparseGiant1.txt");
         Matrix m2 = new SparseMatrix("SparseGiant2.txt");
         Matrix expected=new SparseMatrix("ResGiant.txt");
         assertEquals(expected, m1.mul(m2));
-    }*/
+    }
 
     /*@Test
     public void mulSSEx3() {
