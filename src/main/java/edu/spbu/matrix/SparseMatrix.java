@@ -154,11 +154,10 @@ public class SparseMatrix implements Matrix
           if (SMtx.SMatr == SMatr) return true;
           //System.out.println("expected: " + this.toString());
          // System.out.println("actual: " + SMtx.toString());
-          //if (this.hashCode() == SMtx.hashCode())
+          if (this.hashCode() != SMtx.hashCode()) return false;
 
               if (nr != SMtx.nr || nc != SMtx.nc) return false;
                   if (SMatr.size()!=SMtx.SMatr.size())return false;
-                  System.out.print("1");
                   for (Map.Entry<Integer, Double> e : SMatr.entrySet()) {
 
                           if (SMatr.get(e.getKey())-(SMtx.SMatr.get(e.getKey()))!=0)
@@ -172,7 +171,14 @@ public class SparseMatrix implements Matrix
 
   @Override
   public int hashCode() {
-    return Objects.hash(SMatr, nr, nc);
+      int hsh=Objects.hash(nr,nc);
+    for(Map.Entry<Integer,Double> e:SMatr.entrySet())
+    {
+        hsh+=(e.getKey().hashCode()<<2)+31;
+        hsh+=(e.getValue().hashCode()<<2)+31;
+        hsh>>=1;
+    }
+    return hsh;
   }
 
   @Override public String toString() {
