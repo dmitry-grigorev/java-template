@@ -39,7 +39,7 @@ public class DenseMatrix implements Matrix
               height++;
               strrepcurrln=bufR.readLine();
           }
-          
+
           bufR.close();
           double[][]res=new double[height][length];
           for(int i=0;i<height;i++)

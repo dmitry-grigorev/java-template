@@ -35,7 +35,8 @@ public class SparseMatrix implements Matrix
         for (int i = 0; i < length; i++) {
           if(!dividedcurrln[0].isEmpty()) {
             element = Double.parseDouble(dividedcurrln[i]);
-            SMatr.put(key0 + i, element);
+            if(element!=0)
+                SMatr.put(key0 + i, element);
           }
         }
         height++;
@@ -97,6 +98,7 @@ public class SparseMatrix implements Matrix
               buf+=SMatr.get(i*nc+k)*(SMtx.SMatr.get(k*SMtx.nc+j));
             }
           }
+          if(buf!=0)
           result.put(i*SMtx.nc+j,buf);
         }
       }
@@ -114,6 +116,8 @@ public class SparseMatrix implements Matrix
   {
     return null;
   }
+
+
   public double getEL(int i,int j)
   {
       if(!SMatr.containsKey(i*nc+j))
@@ -150,24 +154,31 @@ public class SparseMatrix implements Matrix
           if (SMtx.SMatr == SMatr) return true;
           //System.out.println("expected: " + this.toString());
          // System.out.println("actual: " + SMtx.toString());
-          //if (this.hashCode() == SMtx.hashCode())
-              if (nr == SMtx.nr && nc == SMtx.nc) {
-                  for (int i = 0; i < nr; i++) {
-                      for (int j = 0; j < nc; j++) {
-                          if(SMtx.getEL(i,j)!=this.getEL(i,j))
-                              return false;
-                      }
-                  }
+          if (this.hashCode() != SMtx.hashCode()) return false;
 
-                  return true;
-              }
+              if (nr != SMtx.nr || nc != SMtx.nc) return false;
+                  if (SMatr.size()!=SMtx.SMatr.size())return false;
+                  for (Map.Entry<Integer, Double> e : SMatr.entrySet()) {
+
+                          if (SMatr.get(e.getKey())-(SMtx.SMatr.get(e.getKey()))!=0)
+                              return false;
+                      }return true;
+
+
       }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(SMatr, nr, nc);
+      int hsh=Objects.hash(nr,nc);
+    for(Map.Entry<Integer,Double> e:SMatr.entrySet())
+    {
+        hsh+=(e.getKey().hashCode()<<2)+31;
+        hsh+=(e.getValue().hashCode()<<2)+31;
+        hsh>>=1;
+    }
+    return hsh;
   }
 
   @Override public String toString() {
