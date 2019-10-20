@@ -111,4 +111,12 @@ public class MatrixTest
         System.out.println("actual:"+((SparseMatrix)actual).toString());
         assertNotEquals(expected, m1.mul(m2));
     }
+
+    @Test(expected=RuntimeException.class)
+    public void Failmul3() {
+        Matrix m1 = new SparseMatrix(null,0,0);
+        Matrix m2 = new SparseMatrix(null,0,0);
+        Matrix actual=m1.mul(m2);
+        System.out.println("actual:"+((SparseMatrix)actual).toString());
+    }
 }

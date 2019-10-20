@@ -118,7 +118,8 @@ public class SparseMatrix implements Matrix
 
   public SparseMatrix mul(SparseMatrix SMtx)
   {
-    if(nc==SMtx.nr&&SMatr!=null&&SMtx.SMatr!=null)
+      if(nc==0||SMtx.nr==0||SMatr==null||SMtx.SMatr==null) return null;
+    if(nc==SMtx.nr)
     {
       PointComparator comp= new PointComparator();
       TreeMap<Point,Double> result=new TreeMap<>(comp);
@@ -247,6 +248,7 @@ public class SparseMatrix implements Matrix
   }
 
   @Override public String toString() {
+      if(SMatr==null) throw new RuntimeException("Встречена пустая матрица");
       StringBuilder resBuilder = new StringBuilder();
       resBuilder.append('\n');
       for (int i = 0; i < nr; i++) {

@@ -128,7 +128,8 @@ public class DenseMatrix implements Matrix
   }
 
     public DenseMatrix mul(SparseMatrix SMtx){
-        if(nc==SMtx.nr&&SMtx.SMatr!=null&&DMatr!=null)
+        if(nc==0&&SMtx.nr==0) return null;
+        if(nc==SMtx.nr)
         {
             double[][] res=new double[nr][SMtx.nc];
             for(int i=0;i<nr;i++)
@@ -167,6 +168,7 @@ public class DenseMatrix implements Matrix
     }
 
     @Override public String toString() {
+        if(DMatr==null) throw new RuntimeException("Встречена пустая матрица");
         StringBuilder resBuilder=new StringBuilder();
         resBuilder.append('\n');
         for(int i=0;i<nr;i++) {
