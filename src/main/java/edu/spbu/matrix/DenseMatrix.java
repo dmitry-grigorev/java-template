@@ -194,8 +194,6 @@ public class DenseMatrix implements Matrix
         DenseMatrix DMtx=(DenseMatrix)o;
         if (DMatr == null || DMtx.DMatr == null) return false;
         if (DMtx.DMatr == DMatr) return true;
-        System.out.println("expected: " + this.toString());
-        System.out.println("actual: " + DMtx.toString());
         if (this.hashCode() == DMtx.hashCode())
             if (nr == DMtx.nr && nc == DMtx.nc) {
                 for (int i = 0; i < nr; i++) {
@@ -212,8 +210,6 @@ public class DenseMatrix implements Matrix
     {
         SparseMatrix SMtx=(SparseMatrix)o;
         if (DMatr == null || SMtx.SMatr == null) return false;
-        System.out.println("expected: " + this.toString());
-        System.out.println("actual: " + SMtx.toString());
         if (nr == SMtx.nr && nc == SMtx.nc) {
             int nonzeros=0;
             for(int i=0;i<nr;i++)

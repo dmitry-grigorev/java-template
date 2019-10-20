@@ -15,34 +15,47 @@ public class MatrixTest
   public void mulDDEx1() {
     Matrix m1 = new DenseMatrix("m1.txt");
     Matrix m2 = new DenseMatrix("m2.txt");
+    Matrix actual=m1.mul(m2);
     Matrix expected = new DenseMatrix("result.txt");
-    assertEquals(expected, m1.mul(m2));
+    System.out.println("expected:"+(expected).toString());
+    System.out.println("actual:"+((DenseMatrix)actual).toString());
+    assertEquals(expected, actual);
   }
 
     //Тест умножения плотных матриц. Ожидается успех.
   @Test
   public void mulDDEx2() {
-        Matrix m1 = new DenseMatrix("m3.txt");
-        Matrix m2 = new DenseMatrix("m4.txt");
-        Matrix expected = new DenseMatrix("result2.txt");
-        assertEquals(expected, m1.mul(m2));
+      Matrix m1 = new DenseMatrix("m3.txt");
+      Matrix m2 = new DenseMatrix("m4.txt");
+      Matrix actual=m1.mul(m2);
+      Matrix expected = new DenseMatrix("result2.txt");
+      System.out.println("expected:"+(expected).toString());
+      System.out.println("actual:"+((DenseMatrix)actual).toString());
+      assertEquals(expected, actual);
+  }
+
+  //Тест умножения разреженных матриц. Ожидается успех.
+  @Test
+  public void mulSSEx1() {
+      Matrix m1 = new SparseMatrix("SparseA1.txt");
+      Matrix m2 = new SparseMatrix("SparseA2.txt");
+      Matrix actual=m1.mul(m2);
+      Matrix expected=new SparseMatrix("ResA1xA2.txt");
+      System.out.println("expected:"+(expected).toString());
+      System.out.println("actual:"+((SparseMatrix)actual).toString());
+      assertEquals(expected, actual);
   }
 
   //Тест умножения разреженных матриц. Ожидается успех.
     @Test
-    public void mulSSEx1() {
-        Matrix m1 = new SparseMatrix("SparseA1.txt");
-        Matrix m2 = new SparseMatrix("SparseA2.txt");
-        Matrix expected=new SparseMatrix("ResA1xA2.txt");
-        assertEquals(expected, m1.mul(m2));
-    }
-    //Тест умножения разреженных матриц. Ожидается успех.
-    @Test
     public void mulSSEx2() {
         Matrix m1 = new SparseMatrix("SparseA3.txt");
         Matrix m2 = new SparseMatrix("SparseA4.txt");
+        Matrix actual=m1.mul(m2);
         Matrix expected=new SparseMatrix("ResA3xA4.txt");
-        assertEquals(expected, m1.mul(m2));
+        System.out.println("expected:"+(expected).toString());
+        System.out.println("actual:"+((SparseMatrix)actual).toString());
+        assertEquals(expected, actual);
     }
 
     //Тест умножения больших разреженных матриц.
@@ -59,8 +72,11 @@ public class MatrixTest
     public void mulSDEx1() {
         Matrix m1 = new SparseMatrix("PermutationMatrix.txt");
         Matrix m2 = new DenseMatrix("m1.txt");
+        Matrix actual=m1.mul(m2);
         Matrix expected=new DenseMatrix("PermutationResult1.txt");
-        assertEquals(expected, m1.mul(m2));
+        System.out.println("expected:"+(expected).toString());
+        System.out.println("actual:"+((DenseMatrix)actual).toString());
+        assertEquals(expected, actual);
     }
 
     //Тест умножения плотной матрицы на разреженную. Ождиается успех.
@@ -68,7 +84,10 @@ public class MatrixTest
     public void mulDSEx1() {
         Matrix m1 = new DenseMatrix("m1.txt");
         Matrix m2 = new SparseMatrix("PermutationMatrix.txt");
+        Matrix actual=m1.mul(m2);
         Matrix expected=new DenseMatrix("PermutationResult2.txt");
+        System.out.println("expected:"+(expected).toString());
+        System.out.println("actual:"+((DenseMatrix)actual).toString());
         assertEquals(expected, m1.mul(m2));
     }
 
@@ -86,7 +105,10 @@ public class MatrixTest
     public void Failmul2() {
         Matrix m1 = new SparseMatrix("SparseA1.txt");
         Matrix m2 = new SparseMatrix("SparseA2.txt");
+        Matrix actual=m1.mul(m2);
         Matrix expected = new SparseMatrix("FailedTest2.txt");
+        System.out.println("expected:"+(expected).toString());
+        System.out.println("actual:"+((SparseMatrix)actual).toString());
         assertNotEquals(expected, m1.mul(m2));
     }
 }

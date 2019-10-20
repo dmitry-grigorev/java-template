@@ -193,8 +193,6 @@ public class SparseMatrix implements Matrix
       {
           DenseMatrix DMtx=(DenseMatrix) o;
           if (SMatr == null || DMtx.DMatr == null) return false;
-          System.out.println("expected: " + this.toString());
-          System.out.println("actual: " + DMtx.toString());
           if (nr == DMtx.nr && nc == DMtx.nc) {
               int nonzeros=0;
               for(int i=0;i<DMtx.nr;i++)
@@ -223,8 +221,6 @@ public class SparseMatrix implements Matrix
           SparseMatrix SMtx=(SparseMatrix)o;
           if (SMatr == null || SMtx.SMatr == null) return false;
           if (SMtx.SMatr == SMatr) return true;
-          System.out.println("expected: " + this.toString());
-          System.out.println("actual: " + SMtx.toString());
           if (this.hashCode() != SMtx.hashCode()) return false;
           if (nr != SMtx.nr || nc != SMtx.nc) return false;
           if (SMatr.size()!=SMtx.SMatr.size())return false;
