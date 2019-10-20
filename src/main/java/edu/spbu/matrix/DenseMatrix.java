@@ -1,5 +1,6 @@
 package edu.spbu.matrix;
 
+import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,7 +64,7 @@ public class DenseMatrix implements Matrix
       }
   }
 
-  private DenseMatrix(double[][] input)
+  public DenseMatrix(double[][] input)
   {
       if (input.length > 0 )
       {
@@ -73,7 +74,7 @@ public class DenseMatrix implements Matrix
       }
   }
 
-  private DenseMatrix Transpose()
+  public DenseMatrix transpose()
   {
       double[][] transposedDMtx=new double[nc][nr];
       for(int i=0;i<nc;i++)
@@ -97,7 +98,11 @@ public class DenseMatrix implements Matrix
   {
       if(o instanceof DenseMatrix)
           return mul((DenseMatrix) o);
-      return null;
+      else if(o instanceof SparseMatrix)
+      {
+          return mul ((SparseMatrix)o);
+      }
+      else throw new RuntimeException("Применяемый операнд является представителем класса иного происхождения");
 
   }
 
@@ -106,7 +111,7 @@ public class DenseMatrix implements Matrix
       if(nc==DMtx.nr&&DMatr!=null&&DMtx.DMatr!=null)
       {
           double[][] res=new double[nr][DMtx.nc];
-          DenseMatrix tDMtx=DMtx.Transpose();
+          DenseMatrix tDMtx=DMtx.transpose();
           for(int i=0;i<nr;i++)
           {
               for(int j=0;j<tDMtx.nr;j++)
@@ -119,12 +124,29 @@ public class DenseMatrix implements Matrix
           }
           return new DenseMatrix(res);
       }
-      else
-      {
-          System.out.println("Данные не отвечают правилам матричного умножения");
-          return null;
-      }
+      else throw new RuntimeException("Размеры матриц не отвечают матричному уможению.");
   }
+
+    public DenseMatrix mul(SparseMatrix SMtx){
+        if(nc==SMtx.nr&&SMtx.SMatr!=null&&DMatr!=null)
+        {
+            double[][] res=new double[nr][SMtx.nc];
+            for(int i=0;i<nr;i++)
+            {
+                for(Point p:SMtx.SMatr.keySet())
+                {
+                    for(int k=0;k<nr;k++)
+                    {
+                        if(p.x==k)
+                        {
+                            res[i][p.y]+=DMatr[i][k]*SMtx.SMatr.get(p);
+                        }
+                    }
+                }
+            }
+            return new DenseMatrix(res);
+        }else throw new RuntimeException("Размеры матриц не отвечают матричному уможению.");
+    }
 
   /**
    * многопоточное умножение матриц
@@ -193,11 +215,23 @@ public class DenseMatrix implements Matrix
         System.out.println("expected: " + this.toString());
         System.out.println("actual: " + SMtx.toString());
         if (nr == SMtx.nr && nc == SMtx.nc) {
-            for (int i = 0; i < nr; i++) {
-                for (int j = 0; j < nc; j++) {
-                    if (DMatr[i][j]!=SMtx.getEL(i,j)) {
-                        return false;
+            int nonzeros=0;
+            for(int i=0;i<nr;i++)
+            {
+                for(int j=0;j<nc;j++)
+                {
+                    if(DMatr[i][j]!=0)
+                    {
+                        nonzeros++;
                     }
+                }
+            }
+            if(nonzeros!=SMtx.SMatr.size()) return false;
+            for (Point k: SMtx.SMatr.keySet()) {
+                if(DMatr[k.x][k.y]==0)
+                    return false;
+                if (DMatr[k.x][k.y]!=SMtx.SMatr.get(k)) {
+                    return false;
                 }
             }
             return true;
