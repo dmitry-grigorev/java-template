@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 /**
@@ -14,7 +15,7 @@ import java.util.TreeMap;
  */
 public class SparseMatrix implements Matrix
 {
-  public TreeMap <Point, Double> SMatr;
+  public TreeMap<Point, Double> SMatr;
   public int nr;
   public int nc;
 
@@ -102,20 +103,6 @@ public class SparseMatrix implements Matrix
     else throw new RuntimeException("Применяемый операнд является представителем класса иного происхождения");
   }
 
-  public SparseMatrix transpose()
-  {
-      PointComparator comp= new PointComparator();
-      TreeMap<Point,Double> transposedSMtx=new TreeMap<>(comp);
-      Point p=new Point();
-      for(Point k:SMatr.keySet())
-      {
-          p.x=k.y;
-          p.y=k.x;
-          transposedSMtx.put(p,SMatr.get(k));
-      }
-      return new SparseMatrix(transposedSMtx,nc,nr);
-  }
-
   public SparseMatrix mul(SparseMatrix SMtx)
   {
       if(nc==0||SMtx.nr==0||SMatr==null||SMtx.SMatr==null) return null;
@@ -172,6 +159,21 @@ public class SparseMatrix implements Matrix
         }else throw new RuntimeException("Размеры матриц не отвечают матричному уможению.");
     }
 
+
+
+    public SparseMatrix transpose()
+    {
+        PointComparator comp= new PointComparator();
+        TreeMap<Point,Double> transposedSMtx=new TreeMap<>(comp);
+        Point p=new Point();
+        for(Point k:SMatr.keySet())
+        {
+            p.x=k.y;
+            p.y=k.x;
+            transposedSMtx.put(p,SMatr.get(k));
+        }
+        return new SparseMatrix(transposedSMtx,nc,nr);
+    }
   /**
    * многопоточное умножение матриц
    *

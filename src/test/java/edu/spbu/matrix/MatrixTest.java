@@ -21,7 +21,7 @@ public class MatrixTest
     System.out.println("actual:"+((DenseMatrix)actual).toString());
     assertEquals(expected, actual);
   }
-
+  
     //Тест умножения плотных матриц. Ожидается успех.
   @Test
   public void mulDDEx2() {
@@ -112,7 +112,7 @@ public class MatrixTest
         assertNotEquals(expected, m1.mul(m2));
     }
 
-    @Test(expected=RuntimeException.class)
+    @Test(expected=NullPointerException.class)
     public void Failmul3() {
         Matrix m1 = new SparseMatrix(null,0,0);
         Matrix m2 = new SparseMatrix(null,0,0);
