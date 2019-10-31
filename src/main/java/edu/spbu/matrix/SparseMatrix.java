@@ -209,7 +209,7 @@ public class SparseMatrix implements Matrix
           SparseMatrix SMtx=(SparseMatrix)o;
           if (SMatr == null || SMtx.SMatr == null) return false;
           if (SMtx.SMatr == SMatr) return true;
-          //if (this.hashCode() != SMtx.hashCode()) return false;
+          if (this.hashCode() != SMtx.hashCode()) return false;
           if (nr != SMtx.nr || nc != SMtx.nc) return false;
           if (SMatr.size()!=SMtx.SMatr.size())return false;
           for (Point p:SMatr.keySet()) {
@@ -224,17 +224,10 @@ public class SparseMatrix implements Matrix
 
   @Override
   public int hashCode() {
-      /*int hsh=Objects.hash(nr,nc);
-    for(Point p:SMatr.keySet())
-    {
-        hsh+=(p.hashCode()<<2)+31;
-        hsh+=(SMatr.get(p).hashCode()<<2)+31;
-    }*/
-
       int hsh=Objects.hash(nr,nc);
       for(Point p:SMatr.keySet())
       {
-
+          hsh+=(SMatr.get(p).hashCode()<<2)+31;
       }
 
     return hsh;
