@@ -6,20 +6,18 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
+
 /**
  * Разряженная матрица
  */
 public class SparseMatrix implements Matrix
 {
-  public TreeMap<Point, Double> SMatr;
+  public HashMap<Point, Double> SMatr;
   public int nr;
   public int nc;
 
-    private static class PointComparator implements Comparator<Point>
+    /*private static class PointComparator implements Comparator<Point>
     {
         @Override
         public int compare(Point a, Point b) {
@@ -28,7 +26,7 @@ public class SparseMatrix implements Matrix
             if(a.x<b.x) return -1;
             else return Integer.compare(a.y, b.y);
         }
-    }
+    }*/
 
   /**
    * загружает матрицу из файла
@@ -38,8 +36,8 @@ public class SparseMatrix implements Matrix
     try {
       FileReader rdr = new FileReader(fileName);
       BufferedReader bufR = new BufferedReader(rdr);
-      PointComparator comp= new PointComparator();
-      SMatr=new TreeMap<>(comp);
+      //PointComparator comp= new PointComparator();
+      SMatr=new HashMap<>();
       String[] dividedcurrln;
       String strrepcurrln=bufR.readLine();
       int length=0,height=0;
@@ -75,7 +73,7 @@ public class SparseMatrix implements Matrix
 
   }
 
-  public SparseMatrix(TreeMap<Point,Double> SMatr,int nrows,int ncols)
+  public SparseMatrix(HashMap<Point,Double> SMatr,int nrows,int ncols)
   {
     this.SMatr=SMatr;
     this.nr=nrows;
@@ -108,25 +106,26 @@ public class SparseMatrix implements Matrix
       if(nc==0||SMtx.nr==0||SMatr==null||SMtx.SMatr==null) return null;
     if(nc==SMtx.nr)
     {
-      PointComparator comp= new PointComparator();
-      TreeMap<Point,Double> result=new TreeMap<>(comp);
+      //PointComparator comp= new PointComparator();
+      HashMap<Point,Double> result=new HashMap<>();
+      SparseMatrix tSMtx=SMtx.transpose();
       for(Point k: SMatr.keySet())
       {
-        for(Point l:SMtx.SMatr.keySet())
+        for(Point l:tSMtx.SMatr.keySet())
         {
-            if(k.y==l.x)
+            if(k.y==l.y)
             {
                 double buf;
-                Point p=new Point(k.x,l.y);
+                Point p=new Point(k.x,l.x);
                 if(result.containsKey(p))
                 {
-                    buf=result.get(p)+SMatr.get(k)*SMtx.SMatr.get(l);
+                    buf=result.get(p)+SMatr.get(k)*tSMtx.SMatr.get(l);
                     if(buf==0) result.remove(p);
                     else result.put(p,buf);
                 }
                 else
                 {
-                    buf=SMatr.get(k)*SMtx.SMatr.get(l);
+                    buf=SMatr.get(k)*tSMtx.SMatr.get(l);
                     result.put(p,buf);
                 }
             }
@@ -163,13 +162,12 @@ public class SparseMatrix implements Matrix
 
     public SparseMatrix transpose()
     {
-        PointComparator comp= new PointComparator();
-        TreeMap<Point,Double> transposedSMtx=new TreeMap<>(comp);
-        Point p=new Point();
+        //PointComparator comp= new PointComparator();
+        HashMap<Point,Double> transposedSMtx=new HashMap<>();
+        Point p;
         for(Point k:SMatr.keySet())
         {
-            p.x=k.y;
-            p.y=k.x;
+            p=new Point(k.y,k.x);
             transposedSMtx.put(p,SMatr.get(k));
         }
         return new SparseMatrix(transposedSMtx,nc,nr);
@@ -224,7 +222,7 @@ public class SparseMatrix implements Matrix
           SparseMatrix SMtx=(SparseMatrix)o;
           if (SMatr == null || SMtx.SMatr == null) return false;
           if (SMtx.SMatr == SMatr) return true;
-          if (this.hashCode() != SMtx.hashCode()) return false;
+          //if (this.hashCode() != SMtx.hashCode()) return false;
           if (nr != SMtx.nr || nc != SMtx.nc) return false;
           if (SMatr.size()!=SMtx.SMatr.size())return false;
           for (Point p:SMatr.keySet()) {
