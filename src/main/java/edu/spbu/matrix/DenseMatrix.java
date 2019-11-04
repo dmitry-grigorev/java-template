@@ -1,10 +1,14 @@
 package edu.spbu.matrix;
 
 import java.awt.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+
 /**
  * Плотная матрица
  */
@@ -149,6 +153,75 @@ public class DenseMatrix implements Matrix
         }else throw new RuntimeException("Размеры матриц не отвечают матричному уможению.");
     }
 
+    class Scheduler
+    {
+        int readyrow;
+        int step;
+        Task[] atask;
+        DenseMatrix right;
+        double[][] result;
+
+        private class Task implements Runnable {
+            Thread thread;
+
+            Task (int n)
+            {
+                thread=new Thread(this);
+                thread.start();
+                System.out.println(thread.getName()+" is working.");
+            }
+
+            @Override
+            public void run() {
+                while(readyrow<nr) {
+                    int start = increment();
+                    int end;
+                    if (start + step < nr)
+                        end = start + step;
+                    else
+                        end = nr;
+                    for (int i = start; i < end; i++)
+                        for (int j = 0; j < right.nr; j++)
+                            for (int k = 0; k < right.nc; k++) {
+                                result[i][j] += DMatr[i][k] * right.DMatr[j][k];
+                            }
+                }
+            }
+        }
+
+        Scheduler (DenseMatrix r,int numofthreads,int step)
+        {
+            readyrow=-step;
+            this.step=step;
+            atask=new Task[numofthreads];
+            right=r;
+            result=new double[nr][r.nr];
+        }
+        synchronized int increment()
+        {
+            return readyrow+=step;
+        }
+        double[][] control()
+        {
+            for(int i=0;i<atask.length;i++)
+            {
+                atask[i]=new Task(i);
+            }
+            try
+            {
+                for (int i = 0; i<atask.length; i++) {
+                    atask[i].thread.join();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return result;
+        }
+
+    }
+
+
   /**
    * многопоточное умножение матриц
    *
@@ -157,7 +230,17 @@ public class DenseMatrix implements Matrix
    */
   @Override public Matrix dmul(Matrix o)
   {
-    return null;
+      DenseMatrix tDMtx=((DenseMatrix)o).transpose();
+      int numofthreads=Runtime.getRuntime().availableProcessors();
+      if(numofthreads>nr)
+          numofthreads=nr;
+      int step= numofthreads*(int) (Math.log(nr*nc)/(Math.log(2)));
+      //int step=80;
+      Scheduler chief=new Scheduler(tDMtx,numofthreads,step);
+
+
+
+      return new DenseMatrix(chief.control());
   }
 
 

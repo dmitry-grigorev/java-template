@@ -1,6 +1,9 @@
 package edu.spbu.matrix;
 
+import edu.spbu.MatrixGenerator;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -21,6 +24,32 @@ public class MatrixTest
     System.out.println("actual:"+((DenseMatrix)actual).toString());
     assertEquals(expected, actual);
   }
+
+    @Test
+    public void mulDDEx0() {
+        Matrix m1 = new DenseMatrix("Generated1.txt");
+        Matrix m2 = new DenseMatrix("Generated2.txt");
+
+        long start=System.currentTimeMillis();
+        Matrix M1=m1.mul(m2);
+        long finish=System.currentTimeMillis();
+        System.out.println(finish-start);
+
+        start = System.currentTimeMillis();
+        Matrix M2=m1.dmul(m2);
+        finish = System.currentTimeMillis();
+        System.out.println(finish-start);
+
+
+
+        assertEquals(M1, M2);
+    }
+
+    @Test
+    public void muld() throws IOException {
+        new MatrixGenerator(1,1,"Generated1.txt",500).generate();
+        new MatrixGenerator(1,1,"Generated2.txt",500).generate();
+    }
   
     //Тест умножения плотных матриц. Ожидается успех.
   @Test
