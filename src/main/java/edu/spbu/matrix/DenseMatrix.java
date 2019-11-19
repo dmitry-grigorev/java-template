@@ -101,10 +101,10 @@ public class DenseMatrix implements Matrix
   @Override public Matrix mul(Matrix o)
   {
       if(o instanceof DenseMatrix)
-          return mul((DenseMatrix) o);
+          return this.mul((DenseMatrix) o);
       else if(o instanceof SparseMatrix)
       {
-          return mul ((SparseMatrix)o);
+          return this.mul ((SparseMatrix)o);
       }
       else throw new RuntimeException("Применяемый операнд является представителем класса иного происхождения");
 
@@ -164,7 +164,7 @@ public class DenseMatrix implements Matrix
         private class Task implements Runnable {
             Thread thread;
 
-            Task (int n)
+            Task ()
             {
                 thread=new Thread(this);
                 thread.start();
@@ -175,11 +175,7 @@ public class DenseMatrix implements Matrix
             public void run() {
                 while(readyrow<nr) {
                     int start = increment();
-                    int end;
-                    if (start + step < nr)
-                        end = start + step;
-                    else
-                        end = nr;
+                    int end = Math.min(start + step, nr);
                     for (int i = start; i < end; i++)
                         for (int j = 0; j < right.nr; j++)
                             for (int k = 0; k < right.nc; k++) {
@@ -205,12 +201,12 @@ public class DenseMatrix implements Matrix
         {
             for(int i=0;i<atask.length;i++)
             {
-                atask[i]=new Task(i);
+                atask[i]=new Task();
             }
             try
             {
-                for (int i = 0; i<atask.length; i++) {
-                    atask[i].thread.join();
+                for (Task task : atask) {
+                    task.thread.join();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -230,17 +226,19 @@ public class DenseMatrix implements Matrix
    */
   @Override public Matrix dmul(Matrix o)
   {
-      DenseMatrix tDMtx=((DenseMatrix)o).transpose();
-      int numofthreads=Runtime.getRuntime().availableProcessors();
-      if(numofthreads>nr)
-          numofthreads=nr;
-      int step= numofthreads*(int) (Math.log(nr*nc)/(Math.log(2)));
-      //int step=80;
-      Scheduler chief=new Scheduler(tDMtx,numofthreads,step);
+      if(nc==((DenseMatrix)o).nr&&DMatr!=null&&((DenseMatrix)o).DMatr!=null) {
+          DenseMatrix tDMtx = ((DenseMatrix) o).transpose();
+          int numofthreads = Runtime.getRuntime().availableProcessors();
+          if (numofthreads > nr)
+              numofthreads = nr;
+          //int step = numofthreads * (int) (Math.log1p(nr * nc) / (Math.log(2)));
+          int step=1;
+          Scheduler chief = new Scheduler(tDMtx, numofthreads, step);
 
 
-
-      return new DenseMatrix(chief.control());
+          return new DenseMatrix(chief.control());
+      }
+      return null;
   }
 
 

@@ -6,8 +6,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Разряженная матрица
  */
@@ -101,6 +104,88 @@ public class SparseMatrix implements Matrix
       return new SparseMatrix(transposedSMtx,nc,nr);
   }
 
+
+    private ConcurrentHashMap<Integer,Row> ArrayBuilder(){
+      ConcurrentHashMap<Integer,Row> Array=new ConcurrentHashMap<>();
+        int numofthreads = Runtime.getRuntime().availableProcessors();
+
+        class Scheduler {
+            int readyel;
+            Builder[] Builders;
+
+            Scheduler(int numofthreads)
+            {
+                readyel=0;
+                Builders=new Builder[numofthreads];
+            }
+
+            void control()
+            {
+                for(int i=0;i<Builders.length;i++)
+                {
+                    Builders[i]=new Builder();
+                }
+                try
+                {
+                    for (Builder task : Builders) {
+                        task.thread.join();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            synchronized int increment() {
+                return readyel++;
+            }
+
+            class Builder implements Runnable {
+                Thread thread;
+
+                Builder() {
+                    thread = new Thread(this);
+                    thread.start();
+                    System.out.println(thread.getName() + " is working.");
+                }
+
+                Point[] Values = SMatr.keySet().toArray(new Point[0]);
+
+                @Override
+                public void run() {
+                    while(readyel<Values.length) {
+                        int start=increment();
+                       Point p=Values[start];
+                            if (Array.containsKey(p.x)) {
+                                Array.get(p.x).position.add(p);
+                            } else {
+                                Row r = new Row();
+                                r.position.add(p);
+                                Array.put(p.x, r);
+                            }
+
+                    }
+                }
+            }
+        }
+
+        Scheduler chief=new Scheduler(numofthreads);
+        chief.control();
+
+        return Array;
+    }
+
+
+
+   private class Row
+   {
+       ArrayList<Point> position;
+
+       Row()
+       {
+           position=new ArrayList<>();
+       }
+   }
+
   public SparseMatrix mul(SparseMatrix SMtx)
   {
       if(nc==0||SMtx.nr==0||SMatr==null||SMtx.SMatr==null) return null;
@@ -165,9 +250,113 @@ public class SparseMatrix implements Matrix
    * @param o
    * @return
    */
-  @Override public Matrix dmul(Matrix o)
+  @Override public SparseMatrix dmul(Matrix o)
   {
-    return null;
+
+      class Scheduler {
+          int readyrow;
+          Task[] atask;
+          SparseMatrix right;
+          ConcurrentHashMap<Integer,Row> Rows;
+          ConcurrentHashMap<Point,Double> result;
+
+          class Task implements Runnable {
+              Thread thread;
+
+              Task() {
+                  thread = new Thread(this);
+                  thread.start();
+                  System.out.println(thread.getName() + " is working.");
+              }
+
+              @Override
+              public void run() {
+                  while(readyrow<nr) {
+                      int start = increment();
+                      if(Rows.containsKey(start))
+                      {
+                          for(Point k: Rows.get(start).position)
+                          {
+                              for(int i=0;i<right.nr;i++)
+                              {
+                                  //if(k.y==l.y)
+                                  Point p1=new Point(i,k.y);
+                                  if(right.SMatr.containsKey(p1))
+                                  {
+                                      Point p2=new Point(k.x,i);
+                                      {
+                                          double buf;
+                                          if(result.containsKey(p2))
+                                          {
+                                              buf = result.get(p2) + SparseMatrix.this.SMatr.get(k) * right.SMatr.get(p1);
+                                              if (buf == 0) result.remove(p2);
+                                              else result.put(p2, buf);
+                                          } else {
+                                              buf = SparseMatrix.this.SMatr.get(k) * right.SMatr.get(p1);
+                                              result.put(p2, buf);
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+
+                      }
+                  }
+              }
+          }
+
+          private Scheduler(int numofthreads,SparseMatrix r) {
+              readyrow = 0;
+              atask = new Task[numofthreads];
+              right=r;
+              Rows=SparseMatrix.this.ArrayBuilder();
+              result = new ConcurrentHashMap<>();
+          }
+
+          private synchronized int increment() {
+              return readyrow++;
+          }
+
+          private ConcurrentHashMap<Point,Double> control()
+          {
+              for(int i=0;i<atask.length;i++)
+              {
+                  atask[i]=new Task();
+              }
+              try
+              {
+                  for (Task task : atask) {
+                      task.thread.join();
+                  }
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+
+              return result;
+          }
+      }
+
+
+
+
+      if(nc==((SparseMatrix)o).nr&&SMatr!=null&&((SparseMatrix)o).SMatr!=null) {
+          SparseMatrix tSMtx = ((SparseMatrix) o).transpose();
+          int numofthreads = Runtime.getRuntime().availableProcessors();
+          if (numofthreads > nr)
+              numofthreads = nr;
+          final Scheduler chief = new Scheduler(numofthreads,tSMtx);
+
+          HashMap<Point,Double> result=new HashMap<>();
+          ConcurrentHashMap<Point,Double> cresult=chief.control();
+
+          for(Point p:cresult.keySet())
+          {
+              result.put(p,cresult.get(p));
+          }
+
+          return new SparseMatrix(result,nr,tSMtx.nr);
+      }
+      return null;
   }
 
 
