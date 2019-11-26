@@ -1,19 +1,25 @@
 package edu.spbu.matrix;
 
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Разряженная матрица
  */
 public class SparseMatrix implements Matrix
 {
-  public TreeMap <Integer, Double> SMatr;
+  public HashMap<Point, Double> SMatr;
   public int nr;
   public int nc;
+
   /**
    * загружает матрицу из файла
    * @param fileName
@@ -22,21 +28,22 @@ public class SparseMatrix implements Matrix
     try {
       FileReader rdr = new FileReader(fileName);
       BufferedReader bufR = new BufferedReader(rdr);
-      SMatr=new TreeMap<>();
+      SMatr=new HashMap<>();
       String[] dividedcurrln;
       String strrepcurrln=bufR.readLine();
-      int length=0,key0,height=0;
+      int length=0,height=0;
       double element;
       while(strrepcurrln!=null)
       {
         dividedcurrln = strrepcurrln.split(" ");
         length = dividedcurrln.length;
-        key0=height*length;
         for (int i = 0; i < length; i++) {
           if(!dividedcurrln[0].isEmpty()) {
             element = Double.parseDouble(dividedcurrln[i]);
-            if(element!=0)
-                SMatr.put(key0 + i, element);
+            if(element!=0) {
+                Point p=new Point(height,i);
+                SMatr.put(p, element);
+            }
           }
         }
         height++;
@@ -45,6 +52,7 @@ public class SparseMatrix implements Matrix
       rdr.close();
       nr=height;
       nc=length;
+
     }
     catch(FileNotFoundException e) {
       System.out.println("File not found");
@@ -56,7 +64,7 @@ public class SparseMatrix implements Matrix
 
   }
 
-  public SparseMatrix(TreeMap<Integer,Double> SMatr,int nrows,int ncols)
+  public SparseMatrix(HashMap<Point,Double> SMatr,int nrows,int ncols)
   {
     this.SMatr=SMatr;
     this.nr=nrows;
@@ -77,53 +85,281 @@ public class SparseMatrix implements Matrix
     {
       return mul((SparseMatrix)o);
     }
-    return null;
+    else if(o instanceof DenseMatrix)
+    {
+        return mul((DenseMatrix)o);
+    }
+    else throw new RuntimeException("Применяемый операнд является представителем класса иного происхождения");
   }
+
+  public SparseMatrix transpose()
+  {
+      HashMap<Point,Double> transposedSMtx=new HashMap<>();
+      Point p;
+      for(Point k:SMatr.keySet())
+      {
+          p=new Point(k.y,k.x);
+          transposedSMtx.put(p,SMatr.get(k));
+      }
+      return new SparseMatrix(transposedSMtx,nc,nr);
+  }
+
+
+    private ConcurrentHashMap<Integer,Row> ArrayBuilder(){
+      ConcurrentHashMap<Integer,Row> Array=new ConcurrentHashMap<>();
+        int numofthreads = Runtime.getRuntime().availableProcessors();
+
+        class Scheduler {
+            int readyel;
+            Builder[] Builders;
+
+            Scheduler(int numofthreads)
+            {
+                readyel=0;
+                Builders=new Builder[numofthreads];
+            }
+
+            void control()
+            {
+                for(int i=0;i<Builders.length;i++)
+                {
+                    Builders[i]=new Builder();
+                }
+                try
+                {
+                    for (Builder task : Builders) {
+                        task.thread.join();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            synchronized int increment() {
+                return readyel++;
+            }
+
+            class Builder implements Runnable {
+                Thread thread;
+
+                Builder() {
+                    thread = new Thread(this);
+                    thread.start();
+                    System.out.println(thread.getName() + " is working.");
+                }
+
+                Point[] Values = SMatr.keySet().toArray(new Point[0]);
+
+                @Override
+                public void run() {
+                    while(readyel<Values.length) {
+                        int start=increment();
+                       Point p=Values[start];
+                            if (Array.containsKey(p.x)) {
+                                Array.get(p.x).position.add(p);
+                            } else {
+                                Row r = new Row();
+                                r.position.add(p);
+                                Array.put(p.x, r);
+                            }
+
+                    }
+                }
+            }
+        }
+
+        Scheduler chief=new Scheduler(numofthreads);
+        chief.control();
+
+        return Array;
+    }
+
+
+
+   private class Row
+   {
+       ArrayList<Point> position;
+
+       Row()
+       {
+           position=new ArrayList<>();
+       }
+   }
 
   public SparseMatrix mul(SparseMatrix SMtx)
   {
-    if(nc==SMtx.nr&&SMatr!=null&&SMtx.SMatr!=null)
+      if(nc==0||SMtx.nr==0||SMatr==null||SMtx.SMatr==null) return null;
+    if(nc==SMtx.nr)
     {
-      TreeMap<Integer,Double> result=new TreeMap<>();
-      double buf=0;
-      for(int i=0;i<nr;i++)
+        HashMap<Point,Double> result=new HashMap<>();
+      SparseMatrix tSMtx=SMtx.transpose();
+      for(Point k: SMatr.keySet())
       {
-        for(int j=0;j<SMtx.nc;j++)
+        for(int i=0;i<tSMtx.nr;i++)
         {
-          buf=0;
-          for(int k=0;k<nc;k++)
-          {
-            if(SMatr.containsKey(i*nc+k)&&SMtx.SMatr.containsKey(k* SMtx.nc+j))
+            //if(k.y==l.y)
+            Point p1=new Point(i,k.y);
+            if(tSMtx.SMatr.containsKey(p1))
             {
-              buf+=SMatr.get(i*nc+k)*(SMtx.SMatr.get(k*SMtx.nc+j));
+                Point p2=new Point(k.x,i);
+                {
+                    double buf;
+                    if(result.containsKey(p2))
+                    {
+                        buf = result.get(p2) + SMatr.get(k) * tSMtx.SMatr.get(p1);
+                        if (buf == 0) result.remove(p2);
+                        else result.put(p2, buf);
+                    } else {
+                        buf = SMatr.get(k) * tSMtx.SMatr.get(p1);
+                        result.put(p2, buf);
+                    }
+                }
             }
-          }
-          if(buf!=0)
-          result.put(i*SMtx.nc+j,buf);
         }
       }
       return new SparseMatrix(result,nr,SMtx.nc);
     }
-    return null;
+    else throw new RuntimeException("Размеры матриц не отвечают матричному уможению.");
   }
+
+    public DenseMatrix mul(DenseMatrix DMtx){
+        if(nc==DMtx.nr&&SMatr!=null&&DMtx.DMatr!=null)
+        {
+            double[][] res=new double[nr][DMtx.nc];
+            DenseMatrix tDMtx=DMtx.transpose();
+            for(Point p:SMatr.keySet())
+            {
+                for(int j=0;j<tDMtx.nr;j++)
+                {
+                    for(int k=0;k<nc;k++)
+                    {
+                        if(p.y==k)
+                        {
+                            res[p.x][j]+=SMatr.get(p)*tDMtx.DMatr[j][k];
+                        }
+                    }
+                }
+            }
+            return new DenseMatrix(res);
+        }else throw new RuntimeException("Размеры матриц не отвечают матричному уможению.");
+    }
+
   /**
    * многопоточное умножение матриц
    *
    * @param o
    * @return
    */
-  @Override public Matrix dmul(Matrix o)
+  @Override public SparseMatrix dmul(Matrix o)
   {
-    return null;
+
+      class Scheduler {
+          int readyrow;
+          Task[] atask;
+          SparseMatrix right;
+          ConcurrentHashMap<Integer,Row> Rows;
+          ConcurrentHashMap<Point,Double> result;
+
+          class Task implements Runnable {
+              Thread thread;
+
+              Task() {
+                  thread = new Thread(this);
+                  thread.start();
+                  System.out.println(thread.getName() + " is working.");
+              }
+
+              @Override
+              public void run() {
+                  while(readyrow<nr) {
+                      int start = increment();
+                      if(Rows.containsKey(start))
+                      {
+                          for(Point k: Rows.get(start).position)
+                          {
+                              for(int i=0;i<right.nr;i++)
+                              {
+                                  //if(k.y==l.y)
+                                  Point p1=new Point(i,k.y);
+                                  if(right.SMatr.containsKey(p1))
+                                  {
+                                      Point p2=new Point(k.x,i);
+                                      {
+                                          double buf;
+                                          if(result.containsKey(p2))
+                                          {
+                                              buf = result.get(p2) + SparseMatrix.this.SMatr.get(k) * right.SMatr.get(p1);
+                                              if (buf == 0) result.remove(p2);
+                                              else result.put(p2, buf);
+                                          } else {
+                                              buf = SparseMatrix.this.SMatr.get(k) * right.SMatr.get(p1);
+                                              result.put(p2, buf);
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+
+                      }
+                  }
+              }
+          }
+
+          private Scheduler(int numofthreads,SparseMatrix r) {
+              readyrow = 0;
+              atask = new Task[numofthreads];
+              right=r;
+              Rows=SparseMatrix.this.ArrayBuilder();
+              result = new ConcurrentHashMap<>();
+          }
+
+          private synchronized int increment() {
+              return readyrow++;
+          }
+
+          private ConcurrentHashMap<Point,Double> control()
+          {
+              for(int i=0;i<atask.length;i++)
+              {
+                  atask[i]=new Task();
+              }
+              try
+              {
+                  for (Task task : atask) {
+                      task.thread.join();
+                  }
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+
+              return result;
+          }
+      }
+
+
+
+
+      if(nc==((SparseMatrix)o).nr&&SMatr!=null&&((SparseMatrix)o).SMatr!=null) {
+          SparseMatrix tSMtx = ((SparseMatrix) o).transpose();
+          int numofthreads = Runtime.getRuntime().availableProcessors();
+          if (numofthreads > nr)
+              numofthreads = nr;
+          final Scheduler chief = new Scheduler(numofthreads,tSMtx);
+
+          HashMap<Point,Double> result=new HashMap<>();
+          ConcurrentHashMap<Point,Double> cresult=chief.control();
+
+          for(Point p:cresult.keySet())
+          {
+              result.put(p,cresult.get(p));
+          }
+
+          return new SparseMatrix(result,nr,tSMtx.nr);
+      }
+      return null;
   }
 
 
-  public double getEL(int i,int j)
-  {
-      if(!SMatr.containsKey(i*nc+j))
-        return 0;
-      else return SMatr.get(i*nc+j);
-  }
   /**
    * спавнивает с обоими вариантами
    * @param o
@@ -134,14 +370,24 @@ public class SparseMatrix implements Matrix
       {
           DenseMatrix DMtx=(DenseMatrix) o;
           if (SMatr == null || DMtx.DMatr == null) return false;
-          System.out.println("expected: " + this.toString());
-          System.out.println("actual: " + DMtx.toString());
           if (nr == DMtx.nr && nc == DMtx.nc) {
-              for (int i = 0; i < nr; i++) {
-                  for (int j = 0; j < nc; j++) {
-                      if (DMtx.DMatr[i][j]!=this.getEL(i,j)) {
-                          return false;
+              int nonzeros=0;
+              for(int i=0;i<DMtx.nr;i++)
+              {
+                  for(int j=0;j<DMtx.nc;j++)
+                  {
+                      if(DMtx.DMatr[i][j]!=0)
+                      {
+                          nonzeros++;
                       }
+                  }
+              }
+              if(nonzeros!=SMatr.size()) return false;
+              for (Point k: SMatr.keySet()) {
+                  if(DMtx.DMatr[k.x][k.y]==0)
+                      return false;
+                  if (DMtx.DMatr[k.x][k.y]!=SMatr.get(k)) {
+                      return false;
                   }
               }
               return true;
@@ -152,17 +398,13 @@ public class SparseMatrix implements Matrix
           SparseMatrix SMtx=(SparseMatrix)o;
           if (SMatr == null || SMtx.SMatr == null) return false;
           if (SMtx.SMatr == SMatr) return true;
-          //System.out.println("expected: " + this.toString());
-         // System.out.println("actual: " + SMtx.toString());
           if (this.hashCode() != SMtx.hashCode()) return false;
-
-              if (nr != SMtx.nr || nc != SMtx.nc) return false;
-                  if (SMatr.size()!=SMtx.SMatr.size())return false;
-                  for (Map.Entry<Integer, Double> e : SMatr.entrySet()) {
-
-                          if (SMatr.get(e.getKey())-(SMtx.SMatr.get(e.getKey()))!=0)
-                              return false;
-                      }return true;
+          if (nr != SMtx.nr || nc != SMtx.nc) return false;
+          if (SMatr.size()!=SMtx.SMatr.size())return false;
+          for (Point p:SMatr.keySet()) {
+              if (SMatr.get(p)-(SMtx.SMatr.get(p))!=0)
+                  return false;
+          }return true;
 
 
       }
@@ -172,23 +414,24 @@ public class SparseMatrix implements Matrix
   @Override
   public int hashCode() {
       int hsh=Objects.hash(nr,nc);
-    for(Map.Entry<Integer,Double> e:SMatr.entrySet())
-    {
-        hsh+=(e.getKey().hashCode()<<2)+31;
-        hsh+=(e.getValue().hashCode()<<2)+31;
-        hsh>>=1;
-    }
+      for(Point p:SMatr.keySet())
+      {
+          hsh+=(SMatr.get(p).hashCode()<<2)+31;
+      }
+
     return hsh;
   }
 
   @Override public String toString() {
+      if(SMatr==null) throw new RuntimeException("Встречена пустая матрица");
       StringBuilder resBuilder = new StringBuilder();
       resBuilder.append('\n');
       for (int i = 0; i < nr; i++) {
         resBuilder.append('[');
         for (int j = 0; j < nc; j++) {
-          if (SMatr.containsKey(i * nc + j)) {
-            resBuilder.append(SMatr.get(i * nc + j));
+            Point p=new Point(i,j);
+          if (SMatr.containsKey(p)) {
+            resBuilder.append(SMatr.get(p));
           } else {
             resBuilder.append(0.0);
           }

@@ -1,9 +1,14 @@
 package edu.spbu.matrix;
 
-import java.io.*;
+import java.awt.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+
 /**
  * Плотная матрица
  */
@@ -63,7 +68,7 @@ public class DenseMatrix implements Matrix
       }
   }
 
-  private DenseMatrix(double[][] input)
+  public DenseMatrix(double[][] input)
   {
       if (input.length > 0 )
       {
@@ -73,7 +78,7 @@ public class DenseMatrix implements Matrix
       }
   }
 
-  private DenseMatrix Transpose()
+  public DenseMatrix transpose()
   {
       double[][] transposedDMtx=new double[nc][nr];
       for(int i=0;i<nc;i++)
@@ -96,8 +101,12 @@ public class DenseMatrix implements Matrix
   @Override public Matrix mul(Matrix o)
   {
       if(o instanceof DenseMatrix)
-          return mul((DenseMatrix) o);
-      return null;
+          return this.mul((DenseMatrix) o);
+      else if(o instanceof SparseMatrix)
+      {
+          return this.mul ((SparseMatrix)o);
+      }
+      else throw new RuntimeException("Применяемый операнд является представителем класса иного происхождения");
 
   }
 
@@ -106,7 +115,7 @@ public class DenseMatrix implements Matrix
       if(nc==DMtx.nr&&DMatr!=null&&DMtx.DMatr!=null)
       {
           double[][] res=new double[nr][DMtx.nc];
-          DenseMatrix tDMtx=DMtx.Transpose();
+          DenseMatrix tDMtx=DMtx.transpose();
           for(int i=0;i<nr;i++)
           {
               for(int j=0;j<tDMtx.nr;j++)
@@ -119,12 +128,95 @@ public class DenseMatrix implements Matrix
           }
           return new DenseMatrix(res);
       }
-      else
-      {
-          System.out.println("Данные не отвечают правилам матричного умножения");
-          return null;
-      }
+      else throw new RuntimeException("Размеры матриц не отвечают матричному уможению.");
   }
+
+    public DenseMatrix mul(SparseMatrix SMtx){
+        if(nc==0&&SMtx.nr==0) return null;
+        if(nc==SMtx.nr)
+        {
+            double[][] res=new double[nr][SMtx.nc];
+            for(int i=0;i<nr;i++)
+            {
+                for(Point p:SMtx.SMatr.keySet())
+                {
+                    for(int k=0;k<nr;k++)
+                    {
+                        if(p.x==k)
+                        {
+                            res[i][p.y]+=DMatr[i][k]*SMtx.SMatr.get(p);
+                        }
+                    }
+                }
+            }
+            return new DenseMatrix(res);
+        }else throw new RuntimeException("Размеры матриц не отвечают матричному уможению.");
+    }
+
+    class Scheduler
+    {
+        int readyrow;
+        int step;
+        Task[] atask;
+        DenseMatrix right;
+        double[][] result;
+
+        private class Task implements Runnable {
+            Thread thread;
+
+            Task ()
+            {
+                thread=new Thread(this);
+                thread.start();
+                System.out.println(thread.getName()+" is working.");
+            }
+
+            @Override
+            public void run() {
+                while(readyrow<nr) {
+                    int start = increment();
+                    int end = Math.min(start + step, nr);
+                    for (int i = start; i < end; i++)
+                        for (int j = 0; j < right.nr; j++)
+                            for (int k = 0; k < right.nc; k++) {
+                                result[i][j] += DMatr[i][k] * right.DMatr[j][k];
+                            }
+                }
+            }
+        }
+
+        Scheduler (DenseMatrix r,int numofthreads,int step)
+        {
+            readyrow=-step;
+            this.step=step;
+            atask=new Task[numofthreads];
+            right=r;
+            result=new double[nr][r.nr];
+        }
+        synchronized int increment()
+        {
+            return readyrow+=step;
+        }
+        double[][] control()
+        {
+            for(int i=0;i<atask.length;i++)
+            {
+                atask[i]=new Task();
+            }
+            try
+            {
+                for (Task task : atask) {
+                    task.thread.join();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return result;
+        }
+
+    }
+
 
   /**
    * многопоточное умножение матриц
@@ -134,7 +226,19 @@ public class DenseMatrix implements Matrix
    */
   @Override public Matrix dmul(Matrix o)
   {
-    return null;
+      if(nc==((DenseMatrix)o).nr&&DMatr!=null&&((DenseMatrix)o).DMatr!=null) {
+          DenseMatrix tDMtx = ((DenseMatrix) o).transpose();
+          int numofthreads = Runtime.getRuntime().availableProcessors();
+          if (numofthreads > nr)
+              numofthreads = nr;
+          //int step = numofthreads * (int) (Math.log1p(nr * nc) / (Math.log(2)));
+          int step=1;
+          Scheduler chief = new Scheduler(tDMtx, numofthreads, step);
+
+
+          return new DenseMatrix(chief.control());
+      }
+      return null;
   }
 
 
@@ -145,6 +249,7 @@ public class DenseMatrix implements Matrix
     }
 
     @Override public String toString() {
+        if(DMatr==null) throw new RuntimeException("Встречена пустая матрица");
         StringBuilder resBuilder=new StringBuilder();
         resBuilder.append('\n');
         for(int i=0;i<nr;i++) {
@@ -172,8 +277,6 @@ public class DenseMatrix implements Matrix
         DenseMatrix DMtx=(DenseMatrix)o;
         if (DMatr == null || DMtx.DMatr == null) return false;
         if (DMtx.DMatr == DMatr) return true;
-        System.out.println("expected: " + this.toString());
-        System.out.println("actual: " + DMtx.toString());
         if (this.hashCode() == DMtx.hashCode())
             if (nr == DMtx.nr && nc == DMtx.nc) {
                 for (int i = 0; i < nr; i++) {
@@ -190,14 +293,24 @@ public class DenseMatrix implements Matrix
     {
         SparseMatrix SMtx=(SparseMatrix)o;
         if (DMatr == null || SMtx.SMatr == null) return false;
-        System.out.println("expected: " + this.toString());
-        System.out.println("actual: " + SMtx.toString());
         if (nr == SMtx.nr && nc == SMtx.nc) {
-            for (int i = 0; i < nr; i++) {
-                for (int j = 0; j < nc; j++) {
-                    if (DMatr[i][j]!=SMtx.getEL(i,j)) {
-                        return false;
+            int nonzeros=0;
+            for(int i=0;i<nr;i++)
+            {
+                for(int j=0;j<nc;j++)
+                {
+                    if(DMatr[i][j]!=0)
+                    {
+                        nonzeros++;
                     }
+                }
+            }
+            if(nonzeros!=SMtx.SMatr.size()) return false;
+            for (Point k: SMtx.SMatr.keySet()) {
+                if(DMatr[k.x][k.y]==0)
+                    return false;
+                if (DMatr[k.x][k.y]!=SMtx.SMatr.get(k)) {
+                    return false;
                 }
             }
             return true;
