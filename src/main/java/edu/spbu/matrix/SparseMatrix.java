@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Разряженная матрица
  */
+
 public class SparseMatrix implements Matrix
 {
   public HashMap<Point, Double> SMatr;
@@ -105,87 +106,6 @@ public class SparseMatrix implements Matrix
   }
 
 
-    private ConcurrentHashMap<Integer,Row> ArrayBuilder(){
-      ConcurrentHashMap<Integer,Row> Array=new ConcurrentHashMap<>();
-        int numofthreads = Runtime.getRuntime().availableProcessors();
-
-        class Scheduler {
-            int readyel;
-            Builder[] Builders;
-
-            Scheduler(int numofthreads)
-            {
-                readyel=0;
-                Builders=new Builder[numofthreads];
-            }
-
-            void control()
-            {
-                for(int i=0;i<Builders.length;i++)
-                {
-                    Builders[i]=new Builder();
-                }
-                try
-                {
-                    for (Builder task : Builders) {
-                        task.thread.join();
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            synchronized int increment() {
-                return readyel++;
-            }
-
-            class Builder implements Runnable {
-                Thread thread;
-
-                Builder() {
-                    thread = new Thread(this);
-                    thread.start();
-                    System.out.println(thread.getName() + " is working.");
-                }
-
-                Point[] Values = SMatr.keySet().toArray(new Point[0]);
-
-                @Override
-                public void run() {
-                    while(readyel<Values.length) {
-                        int start=increment();
-                       Point p=Values[start];
-                            if (Array.containsKey(p.x)) {
-                                Array.get(p.x).position.add(p);
-                            } else {
-                                Row r = new Row();
-                                r.position.add(p);
-                                Array.put(p.x, r);
-                            }
-
-                    }
-                }
-            }
-        }
-
-        Scheduler chief=new Scheduler(numofthreads);
-        chief.control();
-
-        return Array;
-    }
-
-
-
-   private class Row
-   {
-       ArrayList<Point> position;
-
-       Row()
-       {
-           position=new ArrayList<>();
-       }
-   }
-
   public SparseMatrix mul(SparseMatrix SMtx)
   {
       if(nc==0||SMtx.nr==0||SMatr==null||SMtx.SMatr==null) return null;
@@ -253,12 +173,13 @@ public class SparseMatrix implements Matrix
   @Override public SparseMatrix dmul(Matrix o)
   {
 
-      class Scheduler {
+      class Scheduler {//Распределитель задач
           int readyrow;
           Task[] atask;
           SparseMatrix right;
           ConcurrentHashMap<Integer,Row> Rows;
           ConcurrentHashMap<Point,Double> result;
+
 
           class Task implements Runnable {
               Thread thread;
@@ -358,6 +279,89 @@ public class SparseMatrix implements Matrix
       }
       return null;
   }
+
+    private ConcurrentHashMap<Integer,Row> ArrayBuilder(){//Строит таблицу "номер строки"--"ключи к элементам этой строки"
+        ConcurrentHashMap<Integer,Row> Array=new ConcurrentHashMap<>();
+        int numofthreads = Runtime.getRuntime().availableProcessors();
+
+        class Scheduler {//Распределитель задач
+            int readyel;
+            Builder[] Builders;
+
+            Scheduler(int numofthreads)
+            {
+                readyel=0;
+                Builders=new Builder[numofthreads];
+            }
+
+            void control()
+            {
+                for(int i=0;i<Builders.length;i++)
+                {
+                    Builders[i]=new Builder();
+                }
+                try
+                {
+                    for (Builder task : Builders) {
+                        task.thread.join();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            synchronized int increment() {
+                return readyel++;
+            }
+
+            class Builder implements Runnable {
+                Thread thread;
+
+                Builder() {
+                    thread = new Thread(this);
+                    thread.start();
+                    System.out.println(thread.getName() + " is working.");
+                }
+
+                Point[] Values = SMatr.keySet().toArray(new Point[0]);
+
+                @Override
+                public void run() {
+                    while(readyel<Values.length) {
+                        int start=increment();
+                        Point p=Values[start];
+                        if (Array.containsKey(p.x)) {
+                            Array.get(p.x).position.add(p);
+                        } else {
+                            Row r = new Row();
+                            r.position.add(p);
+                            Array.put(p.x, r);
+                        }
+
+                    }
+                }
+            }
+        }
+
+        Scheduler chief=new Scheduler(numofthreads);
+        chief.control();
+
+        return Array;
+    }
+
+
+
+    private class Row//Класс строки,содержащей в себе ключи элементов одной строки
+    {
+        ArrayList<Point> position;
+
+        Row()
+        {
+            position=new ArrayList<>();
+        }
+    }
+
+
 
 
   /**
