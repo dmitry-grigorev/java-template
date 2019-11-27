@@ -26,10 +26,10 @@ public class MatrixTest
   }
 
     @Test
-    public void mulDDEx0() throws IOException {
+    public void MultyMulDD() throws IOException {
 
-        new MatrixGenerator(1,1,"Generated1.txt",1000).generate();
-        new MatrixGenerator(1,1,"Generated2.txt",1000).generate();
+        new MatrixGenerator(1,1,"Generated1.txt",500).generate();
+        new MatrixGenerator(1,1,"Generated2.txt",500).generate();
 
         Matrix m1 = new DenseMatrix("Generated1.txt");
         Matrix m2 = new DenseMatrix("Generated2.txt");
@@ -48,6 +48,8 @@ public class MatrixTest
 
         assertEquals(M1, M2);
     }
+
+
 
     @Test
     public void muld() throws IOException {
@@ -69,9 +71,9 @@ public class MatrixTest
 
 
     @Test
-    public void mulSSEx0() throws IOException {
-        new MatrixGenerator(1,3,"SparseGenerated1.txt",500).generate();
-        new MatrixGenerator(1,3,"SparseGenerated2.txt",500).generate();
+    public void MultyMulSS() throws IOException {
+        new MatrixGenerator(1,4,"SparseGenerated1.txt",500).generate();
+        new MatrixGenerator(1,4,"SparseGenerated2.txt",500).generate();
 
         Matrix m1 = new SparseMatrix("SparseGenerated1.txt");
         Matrix m2 = new SparseMatrix("SparseGenerated2.txt");
