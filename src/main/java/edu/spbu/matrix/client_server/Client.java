@@ -21,7 +21,7 @@ public class Client implements Runnable {
             try {
                 BufferedWriter out = new BufferedWriter(
                         new OutputStreamWriter(outstream));
-                out.write("GET /math.spbu.ru HTTP 1.0\r\n\r\n");
+                out.write("GET /test.html HTTP 1.0\r\n\r\n");
                 System.out.println("Response was sent");
                 out.newLine();
                 out.flush();
