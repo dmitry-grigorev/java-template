@@ -174,7 +174,7 @@ public class SparseMatrix implements Matrix
   {
 
       class Scheduler {//Распределитель задач
-          int readyrow;
+          int readyrow0=0;
           Task[] atask;
           SparseMatrix right;
           ConcurrentHashMap<Integer,Row> Rows;
@@ -190,16 +190,21 @@ public class SparseMatrix implements Matrix
                   System.out.println(thread.getName() + " is working.");
               }
 
+
               @Override
               public void run() {
+                  int readyrow;
+                  readyrow=increment();
                   while(readyrow<nr) {
-                      int start = increment();
-                      if(Rows.containsKey(start))
+                     // System.out.println(readyrow);
+
+                      if(Rows.containsKey(readyrow))
                       {
-                          for(Point k: Rows.get(start).position)
+                          for(Point k: Rows.get(readyrow).position)
                           {
                               for(int i=0;i<right.nr;i++)
                               {
+                                  //System.out.println(k);
                                   //if(k.y==l.y)
                                   Point p1=new Point(i,k.y);
                                   if(right.SMatr.containsKey(p1))
@@ -222,12 +227,13 @@ public class SparseMatrix implements Matrix
                           }
 
                       }
+                      readyrow=increment();
                   }
               }
           }
 
           private Scheduler(int numofthreads,SparseMatrix r) {
-              readyrow = 0;
+              readyrow0=0;
               atask = new Task[numofthreads];
               right=r;
               Rows=SparseMatrix.this.ArrayBuilder();
@@ -235,7 +241,7 @@ public class SparseMatrix implements Matrix
           }
 
           private synchronized int increment() {
-              return readyrow++;
+              return readyrow0++;
           }
 
           private ConcurrentHashMap<Point,Double> control()
@@ -283,14 +289,14 @@ public class SparseMatrix implements Matrix
     private ConcurrentHashMap<Integer,Row> ArrayBuilder(){//Строит таблицу "номер строки"--"ключи к элементам этой строки"
         ConcurrentHashMap<Integer,Row> Array=new ConcurrentHashMap<>();
         int numofthreads = Runtime.getRuntime().availableProcessors();
-
+        //int numofthreads=1;
         class Scheduler {//Распределитель задач
-            int readyel;
+            int readyel0;
             Builder[] Builders;
 
             Scheduler(int numofthreads)
             {
-                readyel=0;
+                readyel0=0;
                 Builders=new Builder[numofthreads];
             }
 
@@ -311,7 +317,7 @@ public class SparseMatrix implements Matrix
             }
 
             synchronized int increment() {
-                return readyel++;
+                return readyel0++;
             }
 
             class Builder implements Runnable {
@@ -327,17 +333,21 @@ public class SparseMatrix implements Matrix
 
                 @Override
                 public void run() {
+                    int readyel;
+                    readyel=increment();
                     while(readyel<Values.length) {
-                        int start=increment();
-                        Point p=Values[start];
+
+                        Point p=Values[readyel];
+                        synchronized (Array)
+                        {
                         if (Array.containsKey(p.x)) {
                             Array.get(p.x).position.add(p);
                         } else {
                             Row r = new Row();
                             r.position.add(p);
                             Array.put(p.x, r);
-                        }
-
+                        }}
+                        readyel=increment();
                     }
                 }
             }

@@ -22,11 +22,11 @@ public class Server implements Runnable {
     public void run() {
             try {
                 BufferedReader bread=new BufferedReader(new InputStreamReader(instream));
-                String[] Response=bread.readLine().split("/");
+                String[] Response=bread.readLine().split(" ");
                 System.out.println(Arrays.toString(Response));
-                if(Response[0].equals("GET "))
+                if(Response[0].equals("GET"))
                 {
-                    String buf=Response[1];
+                    String buf=Response[1].substring(1);
                     System.out.println(buf);
                     filename=buf;
                     sendMessage();
@@ -58,10 +58,10 @@ public class Server implements Runnable {
             }
             rdr.close();
             content=resBuilder.toString();
-            String message="<html><h2>HTTP/1.1 200 OK\r\n" +
+            String message="HTTP/1.1 200 OK\r\n" +
                     "Server: Kakoi-to server\r\n" +
                     "Content-Type: text/html\r\n" +
-                    "Connection: close\r\n\r\n</h2></html>" +content;
+                    "Connection: close\r\n\r\n" +content;
             outstream.write(message.getBytes());
             outstream.flush();
 

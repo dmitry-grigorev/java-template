@@ -7,19 +7,21 @@ public class Client implements Runnable {
     public Socket socket;//сокет
     private DataOutputStream outstream;//выходной поток
     private DataInputStream instream;//входной поток
+    //заменить на какой-то jsoninputstream/jsonoutputstream
+    //перейти к сереализации
 
     Client() throws IOException {
          socket= new Socket("localhost", 8080);
          outstream=new DataOutputStream(socket.getOutputStream());
          instream=new DataInputStream(socket.getInputStream());
     }
-
+//клиент посылает запрос и закрывает соеднение(?). Исправить это + сходить на сервер math.spbu.ru
     @Override
     public void run() {
             try {
                 BufferedWriter out = new BufferedWriter(
                         new OutputStreamWriter(outstream));
-                out.write("GET/test.html/HTTP/1.0\r\n\r\n");
+                out.write("GET /math.spbu.ru HTTP 1.0\r\n\r\n");
                 System.out.println("Response was sent");
                 out.newLine();
                 out.flush();
