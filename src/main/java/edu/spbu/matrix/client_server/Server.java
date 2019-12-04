@@ -46,6 +46,9 @@ public class Server implements Runnable {
         File file=new File(filename);
         if(file.exists())
         {
+            /*ObjectMapper obj=new ObjectMapper();
+            String content=obj.writeValueAsString(file);*/
+
             FileReader rdr=new FileReader(file);
             BufferedReader bread=new BufferedReader(rdr);
             String content,str;

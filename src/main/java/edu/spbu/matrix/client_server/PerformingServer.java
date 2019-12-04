@@ -8,10 +8,10 @@ public class PerformingServer {
 
     public static void main(String[] args) throws IOException {
         ServerSocket ss = new ServerSocket(8080);
-    while(true) {
-        Socket s = ss.accept();
-        Server serv = new Server(s);
-        serv.run();
-    }
+        while(true) {
+            Socket s = ss.accept();
+            Server serv = new Server(s);
+            serv.run();
+        }
     }
 }
