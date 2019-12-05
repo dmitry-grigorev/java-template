@@ -12,6 +12,7 @@ public class PerformingServer {
             Socket s = ss.accept();
             Server serv = new Server(s);
             serv.run();
+            s.close();
         }
     }
 }

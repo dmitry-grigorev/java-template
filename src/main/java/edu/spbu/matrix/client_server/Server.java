@@ -46,9 +46,6 @@ public class Server implements Runnable {
         File file=new File(filename);
         if(file.exists())
         {
-            /*ObjectMapper obj=new ObjectMapper();
-            String content=obj.writeValueAsString(file);*/
-
             FileReader rdr=new FileReader(file);
             BufferedReader bread=new BufferedReader(rdr);
             String content,str;
@@ -64,7 +61,7 @@ public class Server implements Runnable {
             String message="HTTP/1.1 200 OK\r\n" +
                     "Server: Kakoi-to server\r\n" +
                     "Content-Type: text/html\r\n" +
-                    "Connection: close\r\n\r\n" +content;
+                    "Connection: close\r\n\r\n" + content;
             outstream.write(message.getBytes());
             outstream.flush();
 

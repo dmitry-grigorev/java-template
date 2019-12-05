@@ -11,7 +11,7 @@ public class PerformingClient {
         {
         try {
             //Client cl=new Client("test.html","localhost",8080);
-            Client cl = new Client("", "ru.wikipedia.org",80);
+            Client cl = new Client("/rus", "math.spbu.ru",80);
             cl.run();
         }catch (SocketException e)
             {

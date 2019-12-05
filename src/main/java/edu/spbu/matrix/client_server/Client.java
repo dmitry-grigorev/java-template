@@ -8,8 +8,7 @@ public class Client implements Runnable {
     private String response;//запрос
     private DataOutputStream outstream;//выходной поток
     private DataInputStream instream;//входной поток
-    //заменить на какой-то jsoninputstream/jsonoutputstream
-    //перейти к сериализации
+
 
     Client(String respondingfile,String servername,int port) throws IOException {
         socket= new Socket(servername,port);
@@ -27,8 +26,6 @@ public class Client implements Runnable {
         {
             e.printStackTrace();
         }
-
-
     }
 
     public void sendResponse() throws IOException {
